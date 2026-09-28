@@ -1,0 +1,92 @@
+{
+  "tool": "auth-session-scanner",
+  "scope_area": 1,
+  "target_commit": "c7859c70e529db67cb871d2199f0e24d728679c1",
+  "checked_at": "2026-09-28T22:23:59.723Z",
+  "checks": {
+    "jwt": {
+      "check": "jwt_algorithm_pinning",
+      "files_with_jwtVerify": 1,
+      "unsafe_count": 0,
+      "findings": [
+        {
+          "file": "server/auth-session.ts",
+          "algorithms_declared": "'RS256'",
+          "includes_none": false,
+          "is_empty": false,
+          "safe": true
+        }
+      ],
+      "verdict": "VERIFIED-SECURE"
+    },
+    "oauth": {
+      "check": "oauth_state_atomicity",
+      "callback_files_checked": 2,
+      "unsafe_count": 0,
+      "findings": [
+        {
+          "file": "api/discord/oauth/callback.ts",
+          "uses_atomic_getdel": true,
+          "uses_check_then_delete_pattern": false,
+          "safe": true
+        },
+        {
+          "file": "api/slack/oauth/callback.ts",
+          "uses_atomic_getdel": true,
+          "uses_check_then_delete_pattern": false,
+          "safe": true
+        }
+      ],
+      "verdict": "VERIFIED-SECURE"
+    },
+    "cookies": {
+      "check": "session_cookie_attributes",
+      "cookie_definitions_found": 5,
+      "unsafe_count": 0,
+      "findings": [
+        {
+          "file": "api/wm-session.js",
+          "cookie_string_snippet": "`${name}=${encodeURIComponent(value)}; Path=/; Max-Age=${COOKIE_MAX_AGE_SECONDS}${name === SESSION_COOKIE ? cookieDomain",
+          "has_httponly": true,
+          "has_secure": true,
+          "has_samesite": true,
+          "safe": true
+        },
+        {
+          "file": "api/wm-session.js",
+          "cookie_string_snippet": "`${SESSION_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`",
+          "has_httponly": true,
+          "has_secure": true,
+          "has_samesite": true,
+          "safe": true
+        },
+        {
+          "file": "api/wm-session.js",
+          "cookie_string_snippet": "`${name}=; Domain=.worldmonitor.app; Path=/; Max-Age=0; Secure; SameSite=Lax`",
+          "has_httponly": false,
+          "has_secure": true,
+          "has_samesite": true,
+          "safe": true
+        },
+        {
+          "file": "api/wm-session.js",
+          "cookie_string_snippet": "`${name}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`",
+          "has_httponly": true,
+          "has_secure": true,
+          "has_samesite": true,
+          "safe": true
+        },
+        {
+          "file": "api/wm-session.js",
+          "cookie_string_snippet": "`${name}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`",
+          "has_httponly": true,
+          "has_secure": true,
+          "has_samesite": true,
+          "safe": true
+        }
+      ],
+      "verdict": "VERIFIED-SECURE"
+    }
+  },
+  "overall_verdict": "VERIFIED-SECURE"
+}

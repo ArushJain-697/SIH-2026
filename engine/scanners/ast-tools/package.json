@@ -1,0 +1,8 @@
+{
+  "name": "ast-tools",
+  "private": true,
+  "description": "Isolated sub-package holding the ONE real dependency (typescript) this project needs, for the ONE check (C2 premium-fetch AST re-derivation) that genuinely cannot be done honestly with a regex. Kept out of the root package.json so the core engine and npm test stay zero-dependency by default — this install is opt-in, only needed to run engine/scanners/authz-access.mjs's AST check.",
+  "dependencies": {
+    "typescript": "^5.6.0"
+  }
+}
