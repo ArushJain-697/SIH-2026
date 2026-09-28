@@ -1,0 +1,14 @@
+{
+  "caller": "user-free-001",
+  "variant": "PATCHED",
+  "note": "ownership filter applied — only the authenticated caller's own rows are returned",
+  "count": 1,
+  "rows": [
+    {
+      "id": "rule-001",
+      "ownerId": "user-free-001",
+      "enabled": true,
+      "label": "Watch: Convoy movement, sector 7"
+    }
+  ]
+}

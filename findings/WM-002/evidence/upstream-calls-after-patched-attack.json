@@ -1,0 +1,27 @@
+{
+  "count": 3,
+  "billable": 3,
+  "calls": [
+    {
+      "ts": "2026-09-28T18:53:53.952Z",
+      "callerId": "attacker",
+      "path": "/v1/lookup",
+      "billable": true,
+      "note": "flagged-malformed-by-caller-AFTER-billing"
+    },
+    {
+      "ts": "2026-09-28T18:53:53.962Z",
+      "callerId": "attacker",
+      "path": "/v1/lookup",
+      "billable": true,
+      "note": "flagged-malformed-by-caller-AFTER-billing"
+    },
+    {
+      "ts": "2026-09-28T18:53:53.970Z",
+      "callerId": "attacker",
+      "path": "/v1/lookup",
+      "billable": true,
+      "note": "flagged-malformed-by-caller-AFTER-billing"
+    }
+  ]
+}

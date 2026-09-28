@@ -1,0 +1,76 @@
+{
+  "count": 10,
+  "billable": 10,
+  "calls": [
+    {
+      "ts": "2026-09-28T18:53:53.863Z",
+      "callerId": "attacker",
+      "path": "/v1/lookup",
+      "billable": true,
+      "note": "flagged-malformed-by-caller-AFTER-billing"
+    },
+    {
+      "ts": "2026-09-28T18:53:53.872Z",
+      "callerId": "attacker",
+      "path": "/v1/lookup",
+      "billable": true,
+      "note": "flagged-malformed-by-caller-AFTER-billing"
+    },
+    {
+      "ts": "2026-09-28T18:53:53.879Z",
+      "callerId": "attacker",
+      "path": "/v1/lookup",
+      "billable": true,
+      "note": "flagged-malformed-by-caller-AFTER-billing"
+    },
+    {
+      "ts": "2026-09-28T18:53:53.885Z",
+      "callerId": "attacker",
+      "path": "/v1/lookup",
+      "billable": true,
+      "note": "flagged-malformed-by-caller-AFTER-billing"
+    },
+    {
+      "ts": "2026-09-28T18:53:53.892Z",
+      "callerId": "attacker",
+      "path": "/v1/lookup",
+      "billable": true,
+      "note": "flagged-malformed-by-caller-AFTER-billing"
+    },
+    {
+      "ts": "2026-09-28T18:53:53.898Z",
+      "callerId": "attacker",
+      "path": "/v1/lookup",
+      "billable": true,
+      "note": "flagged-malformed-by-caller-AFTER-billing"
+    },
+    {
+      "ts": "2026-09-28T18:53:53.904Z",
+      "callerId": "attacker",
+      "path": "/v1/lookup",
+      "billable": true,
+      "note": "flagged-malformed-by-caller-AFTER-billing"
+    },
+    {
+      "ts": "2026-09-28T18:53:53.910Z",
+      "callerId": "attacker",
+      "path": "/v1/lookup",
+      "billable": true,
+      "note": "flagged-malformed-by-caller-AFTER-billing"
+    },
+    {
+      "ts": "2026-09-28T18:53:53.915Z",
+      "callerId": "attacker",
+      "path": "/v1/lookup",
+      "billable": true,
+      "note": "flagged-malformed-by-caller-AFTER-billing"
+    },
+    {
+      "ts": "2026-09-28T18:53:53.921Z",
+      "callerId": "attacker",
+      "path": "/v1/lookup",
+      "billable": true,
+      "note": "flagged-malformed-by-caller-AFTER-billing"
+    }
+  ]
+}

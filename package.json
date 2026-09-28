@@ -1,0 +1,20 @@
+{
+  "name": "worldmonitor-sih26163-assessment",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SIH 26163 — WorldMonitor security assessment: advisory-aware Seam-Linter, regression harness, and minimal local reproductions. Zero external dependencies by design (Node 18+ only).",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/run_all.mjs",
+    "fetch-target": "bash lab/fetch-target-source.sh",
+    "seam-lint": "node framework/seam-linter/analyze-invariants.mjs .cache/worldmonitor-src && node framework/seam-linter/rate-limit-coverage-check.mjs .cache/worldmonitor-src && node framework/seam-linter/cors-scan.mjs .cache/worldmonitor-src",
+    "regress": "node framework/regression-harness/run.mjs",
+    "validate-findings": "node tests/validate_findings.mjs",
+    "scan-landmines": "node tests/scan_landmines.mjs",
+    "proof-spine": "node framework/generate-proof-spine.mjs",
+    "report": "node framework/generate-report.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

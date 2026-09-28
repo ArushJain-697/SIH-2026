@@ -1,0 +1,293 @@
+{
+  "tool": "analyze-invariants",
+  "target_commit": "a1caad92c7488ebb6a1ed6a3a9aed7591f89aab0",
+  "checked_at": "2026-09-28T18:49:45.893Z",
+  "invariant_count": 30,
+  "invariants": [
+    {
+      "file": "scripts/check-analytics-collector.mjs",
+      "kind": "check",
+      "line_count": 424,
+      "purpose": "Scheduled liveness probe for the self-hosted Umami analytics collector\n(`abacus.worldmonitor.app`).\n\nWhy this exists: on 2026-07-20 the collector's Node process OOM-died and\nRailway neither restarted it nor flipped the deployment off `SUCCESS`, so\nnothing alerted. Every product-analytics event was dropped for 4 days\n(~1.1M events) and the gap was only found by hand while asking an unrelated\nquestion about a funnel. See #5565.\n\nDeliberately probes the collector directly rather than trusting Railway's\ndeployment status, which was green throughout that outage.",
+      "referenced_paths": [
+        "./lib/main-module.mjs"
+      ]
+    },
+    {
+      "file": "scripts/check-build-prereqs.mjs",
+      "kind": "check",
+      "line_count": 473,
+      "purpose": "Build prerequisite preflight.\n\nBefore this check, a missing system library surfaced as whatever the tool\nthat tripped over it chose to say. The worst of them is the Linux desktop\nbundle: `linuxdeploy-plugin-gtk` resolves the SVG pixbuf loader through\n`pkg-config --variable=libdir librsvg-2.0`, so without librsvg2's .pc file\ntauri reports only \"failed to run linuxdeploy\" — after the Rust build has\nalready run. The information needed to fix it exists before a single crate\ncompiles; this script surfaces it there instead.\n\nThree properties the ad-hoc `pkg-config --exists || echo` chains lacked:\n\n1. It reports EVERY missing prerequisite in one pass. Fail-on-first turns a\n   six-package gap into six sudo/build round-trips.\n2. It probes CAPABILITIES (pkg-config modules, sonames, commands) and maps\n   to package names only when printing. The probe is what the build actually\n   needs; the package name is distro trivia that varies and goes stale.\n3. Package names are resolved against the archive where that is possible, so\n   a rename cannot produce an install line that fails as a whole. `apt-get\n   install` is all-or-nothing: one wrong name and the user installs nothing\n   and is told only that a package \"has no installation candidate\". The\n   Ubuntu t64 ABI transition renamed libfuse2 -> libfuse2t64 mid-LTS, which\n   is exactly this failure.\n\nScopes: `web` prerequisites gate any build; `desktop` adds the Tauri\ndevelopment requirements; `--bundle` also checks release-only packaging\ntools. A contributor who never touches the desktop app is never asked to\ninstall GTK.\n\nRun: node scripts/check-build-prereqs.mjs [--scope web|desktop|all]\n                                          [--bundle] [--json] [--warn-only]",
+      "referenced_paths": [
+        "./lib/main-module.mjs"
+      ]
+    },
+    {
+      "file": "scripts/check-desktop-build-env.mjs",
+      "kind": "check",
+      "line_count": 342,
+      "purpose": "Desktop build-env completeness check (#5905, part of #5902).\n\nGuards two invariants:\n\n1. Every Tauri build step (`uses: tauri-apps/tauri-action`) in\n   build-desktop.yml and test-linux-app.yml declares every REQUIRED\n   `VITE_*` env key. The web app gets these from Vercel env; the desktop\n   bundle only gets what the workflow passes, and a missing key silently\n   disables the capability in every shipped build (sign-in, subscription\n   Pro, the Cyber Threats layer — the #5905 incident class).\n\n2. Every literal `VITE_*` property the SPA reads is classified here as\n   REQUIRED or EXCLUDED. A new unclassified var fails this check, forcing\n   the author to decide — and record — whether desktop builds need it,\n   instead of silently omitting it the way the #5905 set was.\n\nRun: node scripts/check-desktop-build-env.mjs [--root <repo-root>]",
+      "referenced_paths": [
+        "./lib/main-module.mjs"
+      ]
+    },
+    {
+      "file": "scripts/check-doc-anchors.mjs",
+      "kind": "check",
+      "line_count": 155,
+      "purpose": "Fail on a doc anchor that points at no heading — on its own page or on\nanother exported page.\n\nNothing else catches this. `scripts/enforce-mintlify-reserved-slugs.mjs`\nonly guards Mintlify's reserved /mcp slug, `mint validate` passes in strict\nmode with dead anchors present, and `mint broken-links` checks page links\nand never fragments. So a translated page can keep linking to its English\nslugs indefinitely, which is exactly what happened to docs/zh/mcp-overview.\n\nCross-page fragments are checked too, and they are where the survivors hid:\nthe in-page pass alone reported OK over a tree holding 36 dead `/page#frag`\nlinks, including the very slug a same-page link had just been repaired to.\nA fragment is only resolved when its target page is in the export; anything\noutside it (external hosts, non-exported paths) is counted and skipped,\nbecause this checker can only speak for pages it can read.\n\nGround truth is the RENDERED export, never a slug function of our own.\nMintlify's slug rules are not reproducible by inspection: it strips ASCII\nparentheses (`Daily limit (Pro tier)` -> `daily-limit-pro-tier`) but keeps\nfull-width ones (`每日额度（Pro 套餐）` -> `每日额度（pro-套餐）`), and keeps `&`\nand em-dashes (`Plans & limits` -> `plans-&-limits`, `Annex 1 — Details` ->\n`annex-1--details`) where GitHub's slugger drops them. A near-miss\nreimplementation would emit false failures, which is worse than the gap it\ncloses, so this reads the ids Mintlify actually emitted.\n\nUsage:\n  mint export --output export.zip     # run in docs/\n  unzip -q export.zip -d export/\n  node scripts/check-doc-anchors.mjs export/",
+      "referenced_paths": [
+        "./_html-entities.mjs"
+      ]
+    },
+    {
+      "file": "scripts/check-edge-function-bundles.mjs",
+      "kind": "check",
+      "line_count": 204,
+      "purpose": "Browser-bundle the API entrypoints that can actually ship in a commit.\n\nGit's tracked inventory is the deployment contract. Real Vercel functions\nmust be tracked to reach CI or production, while ignored desktop sidecar\nbundles are local Node artifacts and must not be treated as edge functions.",
+      "referenced_paths": [
+        "./lib/main-module.mjs"
+      ]
+    },
+    {
+      "file": "scripts/check-inventory-count-contracts.mjs",
+      "kind": "check",
+      "line_count": 851,
+      "purpose": "Closed-world register of extensible inventory count contracts.\n\n`selectors` identify the inventory values in the audited test surface. They\nare deliberately local to one file: a generic name such as `registry` is\nsafe here because it cannot taint an unrelated test. Adding a new audited\nsurface requires a registry row; review must keep the register complete.",
+      "referenced_paths": []
+    },
+    {
+      "file": "scripts/check-live-video-sources.mjs",
+      "kind": "check",
+      "line_count": 1098,
+      "purpose": "A YouTube stall (never ready, no verdict, never started) counts as dead only after this many checks alone stall too.",
+      "referenced_paths": [
+        "./_proxy-utils.cjs",
+        "./lib/live-video-channel-live.mjs",
+        "./lib/live-video-refresh.mjs",
+        "./lib/live-video-surfaces.mjs",
+        "./lib/main-module.mjs"
+      ]
+    },
+    {
+      "file": "scripts/check-local-secret-dumps.mjs",
+      "kind": "check",
+      "line_count": 192,
+      "purpose": "(no header comment found)",
+      "referenced_paths": [
+        "./lib/main-module.mjs"
+      ]
+    },
+    {
+      "file": "scripts/check-postmerge-deploys.mjs",
+      "kind": "check",
+      "line_count": 1026,
+      "purpose": "',\n      'scripts/railway-reconcile-control-client.mjs',\n      '.github/workflows/deploy-railway-reconcile-control.yml',\n      'tests/deploy-railway-reconcile-control-workflow.test.mjs',\n    ]),\n    // Path-filtered and rare: the Worker is dormant control-plane infra and a\n    // healthy stretch with no matching push is ordinary. Every tick proves\n    // whether a deploy was due from the trigger-path tree diff; this window\n    // only marks an active run as stuck and labels an old baseline.\n    noRunWindowMs: 14 * 24 * 60 * 60 * 1000,\n  }),\n  Object.freeze({\n    file: 'deploy-worker.yml',\n    displayName: 'Deploy api-cors-preflight Worker',\n    deployJobName: 'Wrangler deploy',\n    // Same shape: path-filtered push-to-main, no gate anywhere. A missing\n    // CLOUDFLARE_API_TOKEN fails it silently like the reconcile Worker's\n    // missing secrets did.\n    skipProofPaths: null,\n    // MUST mirror the workflow's own `on.push.paths` exactly — this list is what\n    // decides whether a deploy was DUE, so anything the workflow deploys on but\n    // this list omits is a deploy the monitor cannot see fail. Pinned by\n    // 'monitored trigger paths mirror each workflow's own push filter'.\n    triggerPaths: Object.freeze([\n      'workers/api-cors-preflight/**',\n      'api/_bootstrap-public-tier.js',\n      'api/_bootstrap-tier-keys.js',\n      'tests/cors-preflight-live.test.mjs',\n      'tests/helpers/public-bootstrap-contract.mjs',\n      '.github/workflows/deploy-worker.yml',\n    ]),\n    // Same dormant reasoning as the reconcile Worker: a healthy run can be\n    // weeks apart, so the trigger-path tree — not age — decides whether a\n    // deploy is due.\n    noRunWindowMs: 14 * 24 * 60 * 60 * 1000,\n  }),\n]);\n\n// Fallback for a workflow that does not declare one.\nexport const DEFAULT_NO_RUN_WINDOW_MS = 24 * 60 * 60 * 1000;\n\n// A run that is still executing is not a verdict: the next tick decides. The\n// A fresh active run is the deploy in progress, which is healthy until the\n// next tick. An active run older than its workflow window is stuck and alarms.\nconst ACTIVE_RUN_STATUSES = new Set(['queued', 'in_progress', 'waiting', 'pending', 'requested']);\n\n// Conclusions that mean \"no verdict, do not judge this run\".\nconst INDETERMINATE_RUN_CONCLUSIONS = new Set([\n  'skipped',\n]);\n\nconst GH_CALL_TIMEOUT_MS = 30_000;\n\n// Independent samples of a workflow's run listing per tick. See readNewestRun\n// for the stale-index-snapshot failure this defends against, and for why the\n// defence is `total_count` comparison plus a quorum rather than three votes:\n// production's own rate (21 alarms in 120 ticks, ~17%) is 5x the rate the\n// tight CI loop showed, so outvoting alone would still leave roughly one false\n// alarm a day. Three samples is what makes the discard-and-quorum rule work\n// while staying inside the budgets below.\nexport const RUN_LISTING_SAMPLES = 3;\n\n// Non-stale samples that must agree before this monitor will say a workflow\n// stopped deploying. Below it, the tick is UNKNOWN (a warning on a green job),\n// never an alarm — a missing deploy persists, so the next tick still catches a\n// real one, while a stale shard's lie does not survive to it.\nexport const RUN_LISTING_ALARM_QUORUM = 2;\n\n// Wall-clock one workflow's sampling may spend before it settles for the\n// samples already in hand. A slow but ANSWERING 5xx is the retryable path, so\n// the samples that cost the most are the ones returning nothing. This caps how\n// many of them one workflow pays for; it does NOT cap a read already in\n// flight, which is what MONITOR_WALL_BUDGET_MS below exists for. The single\n// source of the arithmetic is there — do not restate it here, so the two\n// cannot drift apart.\nexport const RUN_LISTING_SAMPLE_BUDGET_MS = 90_000;\n\n// Retries AFTER the first attempt, so the worst case is 3 calls. Sized against\n// the workflow's `timeout-minutes: 10`: a transport failure returns in about a\n// second, so 3 workflows x 4 reads x 3 attempts costs seconds, not minutes,\n// and RUN_LISTING_SAMPLE_BUDGET_MS bounds the slow-5xx tail. The deployed-\n// baseline read adds nothing here: it is a local `git rev-parse` of the tag\n// the deploy workflow writes, not a GitHub call.\n// The whole walk's wall-clock ceiling, against the workflow's\n// `timeout-minutes: 10` (600s). Per-read budgets cannot bound this on their\n// own, and the arithmetic is worth writing down once because every factor is a\n// constant in this file:\n//\n//   one attempt          <= GH_CALL_TIMEOUT_MS                        30.0s\n//   one read             1 + GH_READ_RETRY_ATTEMPTS attempts + backoff\n//                        3 x 30s + (500ms + 1000ms)                   91.5s\n//   one workflow         2 listing samples (the 2nd starts under\n//                        RUN_LISTING_SAMPLE_BUDGET_MS and overshoots\n//                        it, since the budget is checked BETWEEN\n//                        samples) + 1 unbudgeted readRunJobs\n//                        3 x 91.5s                                   274.5s\n//   three workflows      3 x 274.5s                                  823.5s\n//\n// 823.5s against a 600s timeout: the runner kills the job —\n// which reports as a RED monitor with no verdict for any workflow, the exact\n// false alarm this file exists to remove. The deadline is checked before every\n// gh ATTEMPT (it wraps the callee of createRetryingGh, not its caller), so the\n// overshoot is one in-flight call rather than a whole retry ladder, and every\n// workflow after it is reached still gets its own UNKNOWN rather than nothing.\nexport const MONITOR_WALL_BUDGET_MS = 8 * 60 * 1000;\n\nexport const GH_READ_RETRY_ATTEMPTS = 2;\nexport const GH_READ_RETRY_BASE_MS = 500;\nexport const GH_READ_RETRY_MAX_MS = 4_000;\n\n/**\nIs this `gh` failure worth asking again? (#6479)\n\nThe distinction is whether GitHub ANSWERED. `gh api` puts the status in its\nstderr as `(HTTP nnn)`; a 404 or 422 is an answer and re-asking cannot change\nit, so retrying only burns the job's budget and delays the alarm. When no\nstatus appears at all the request never reached GitHub — TLS, DNS, a reset,\nan EOF — and that is exactly the class that a second attempt fixes.\n\nTimeouts are deliberately terminal: every attempt burns the full 30s call\nbudget, so retrying them would spend the 10-minute job on one dead read. Same\ndecision, same reason, as the sibling watchdog (#6478).",
+      "referenced_paths": [
+        "./lib/gh-run-listing.mjs",
+        "./lib/main-module.mjs",
+        "./railway-cli.mjs"
+      ]
+    },
+    {
+      "file": "scripts/check-public-doc-plan-references.mjs",
+      "kind": "check",
+      "line_count": 181,
+      "purpose": "Internal planning documents must never be reachable from public Mintlify\ncontent. Gitignore does not protect already-tracked plans, so enforce the\nboundary at the documentation publication surface.",
+      "referenced_paths": []
+    },
+    {
+      "file": "scripts/check-pulse-freshness.mjs",
+      "kind": "check",
+      "line_count": 311,
+      "purpose": "Newest committed snapshot and its age. Deliberately NOT\nresolveLatestLivePulseSnapshotPath: that throws once the snapshot passes the\nbuild ceiling, which is precisely the state this monitor exists to report.\nAn alarm that crashes on the condition it watches is not an alarm.",
+      "referenced_paths": [
+        "./build-crawlable-corpus.mjs",
+        "./lib/gh-run-listing.mjs",
+        "./lib/main-module.mjs"
+      ]
+    },
+    {
+      "file": "scripts/check-railway-deploy-drift.mjs",
+      "kind": "check",
+      "line_count": 1113,
+      "purpose": "Decide which source a single service is running, and whether that is head.\n\n`deployments` is the raw `railway deployment list --json` array; pass `error`\ninstead when the query itself failed.",
+      "referenced_paths": [
+        "./audit-railway-watch-paths.mjs",
+        "./railway-cli.mjs",
+        "./railway-deploy-closure.mjs",
+        "./railway-deployments.mjs",
+        "./railway-services.json",
+        "./railway-viewer-deployment-config.mjs"
+      ]
+    },
+    {
+      "file": "scripts/check-railway-reconcile-age.mjs",
+      "kind": "check",
+      "line_count": 317,
+      "purpose": "Did this run actually reconcile the fleet?\n\nTakes the parsed body of `GET /repos/{repo}/actions/runs/{id}/jobs`. Returns\na boolean, never a maybe: a payload this cannot read is `false`, so an\nunrecognised shape trends toward the alarm rather than away from it.",
+      "referenced_paths": [
+        "./lib/gh-run-listing.mjs",
+        "./railway-cli.mjs"
+      ]
+    },
+    {
+      "file": "scripts/check-rust-security-floors.mjs",
+      "kind": "check",
+      "line_count": 204,
+      "purpose": "Rust dependency security floors (#5518, part of #5902).\n\n`src-tauri/Cargo.lock` is what actually decides which crate versions ship —\nthe manifest constraint only bounds resolution. Nothing else in CI inspects\nit: the security-audit workflow covers npm lockfiles only, so before this\ncheck a `cargo update` (or a loosened constraint) could silently drop the\ndesktop app back onto a version with a known advisory and no gate would\nnotice. That is the desktop-drift class #5902 exists to close.\n\nEach floor is a recorded decision: crate, minimum patched version, and the\nadvisory that set it. A crate named here but ABSENT from the lockfile fails\nthe check rather than passing vacuously — a rename or removal must be an\nexplicit decision to drop the floor, not a silent green.\n\nRun: node scripts/check-rust-security-floors.mjs  (npm run desktop:check-rust-floors)",
+      "referenced_paths": [
+        "./lib/main-module.mjs"
+      ]
+    },
+    {
+      "file": "scripts/check-seed-freshness.mjs",
+      "kind": "check",
+      "line_count": 707,
+      "purpose": "Return true for a real ISO calendar instant with an explicit Z or numeric timezone.\nDate.parse alone is insufficient because it normalizes impossible dates such as February 30.",
+      "referenced_paths": [
+        "./seed-freshness-baseline.json"
+      ]
+    },
+    {
+      "file": "scripts/check-sentry-coverage.mjs",
+      "kind": "check",
+      "line_count": 397,
+      "purpose": "Sentry-coverage lint guard.\n\nFlags catch blocks in api/, convex/ and server/ that swallow the error —\nthe pattern that hid the canary OCC bug (Sentry issue WORLDMONITOR-PA)\nfor hours and made the post-mortem impossible. `server/` counts because\nits code is bundled INTO the edge functions at deploy time, so a swallow\nthere is invisible in exactly the same way.\n\nTwo heuristics run per catch block (`} catch (...) { ... }`), against a\nsource with comments and string literals stripped so tokens inside text\nnever count as code:\n\n  1. Logged but not reported — the body has console.error/warn but none\n     of `captureSilentError`, `captureEdgeException`, `Sentry.`, `throw`,\n     or `status: 5xx`.\n  2. Bare `catch {}` — no statements and no comment. Nothing reaches\n     Sentry, the console, or the next reader. Deliberate best-effort\n     swallows document themselves with a `/* why *\\/` note (or the\n     override marker below), so this only fires on accidental ones.\n\nMode:\n  - `--diff` (default in pre-push): only flags catch blocks that\n    OVERLAP a hunk introduced in the diff vs origin/main. A catch\n    block in a changed file that wasn't itself touched is tolerated\n    so unrelated edits in legacy files aren't blocked.\n  - `--all`: scans the whole tree. Use ad-hoc to find existing gaps.\n\nExit code: 0 if clean (or no offending changes), 1 if any flag.\n\nRun manually:\n  node scripts/check-sentry-coverage.mjs            # diff mode\n  node scripts/check-sentry-coverage.mjs --all      # full scan",
+      "referenced_paths": []
+    },
+    {
+      "file": "scripts/check-stacked-merge.mjs",
+      "kind": "check",
+      "line_count": 686,
+      "purpose": "(no header comment found)",
+      "referenced_paths": [
+        "./lib/main-module.mjs"
+      ]
+    },
+    {
+      "file": "scripts/check-style-layout-budget.mjs",
+      "kind": "check",
+      "line_count": 234,
+      "purpose": "The #4536 styleLayout gate (#4487 render axis).\n\n`docs/perf/desktop-mainthread-baseline-2026-07-02.md:103` names the\nstyleLayout share as the gate for forced reflow, and nothing enforced it.\nWorse than nothing: `tests/measure-*-mainthread.test.mts` DO run in CI via\n`test:data`, but they exercise fixture parsing only — the Playwright harness\nnever launches and no measured number is asserted — so a green\n\"measure-desktop-mainthread\" check reads as perf coverage while measuring\nnothing.\n\nThis consumes `scripts/measure-desktop-mainthread.mjs --json` and fails when\nthe styleLayout share of attributed main-thread self-time exceeds the budget.\n\nDeliberately gates the SHARE, not absolute milliseconds. KTD1 (recorded in\nboth baseline docs) is that local lab absolutes are host-contention\ncontaminated — the same URL has scored 28/57/85 — while the relative\ndecomposition is stable across throttle levels and hosts. Gating absolutes\nwould produce a flaky check that gets muted; gating the share does not.\n\nExit codes are split so the reason is legible, but EVERY non-pass is nonzero:\n  0  budget respected against a capture that satisfied the contract\n  1  styleLayout share exceeded the budget — a real regression\n  2  the gate itself was misused (bad args / unreadable input)\n  3  the run did not produce a valid measurement\n\nExit 3 is deliberately NOT 0. An earlier revision soft-failed here to keep\nenvironmental flakiness out of the build, which reproduced the exact defect\nthis gate exists to replace: a scheduled alarm that is green while measuring\nnothing. A scheduled workflow's only channel is pass/fail, so \"I could not\nmeasure\" has to be visible, and a transient red that self-heals next cycle is\nfar cheaper than a permanently dead gate nobody notices.\n\nUsage:\n  node scripts/measure-desktop-mainthread.mjs <url> --cpu 1 --json > report.json\n  node scripts/check-style-layout-budget.mjs report.json [--max-pct 28] [--expect-url /dashboard]",
+      "referenced_paths": []
+    },
+    {
+      "file": "scripts/check-umami-retention-runner.mjs",
+      "kind": "check",
+      "line_count": 252,
+      "purpose": "Runtime health of the Railway `umami-retention` cron service.\n\nThe capacity monitor next to this file measures the volume, which is a\nlagging signal: when the retention runner died, the volume took days to\ndrift into the warning band, and the warning is deliberately non-fatal\n(#6384), so nothing ever failed. #6375 was that gap — the runner exited\nnon-zero on every 15-minute tick for days while every dashboard stayed\ngreen, because `scripts/railway-deployments.mjs` counts CRASHED as \"the\nimage ran\" (true, and the right answer for a source-drift audit) and this\ncron service had no runtime health check of its own.\n\nThis check reads deployment records only. It never connects to Postgres,\nnever mutates Railway, and prints no Railway variables.",
+      "referenced_paths": [
+        "./lib/main-module.mjs",
+        "./railway-deployments.mjs"
+      ]
+    },
+    {
+      "file": "scripts/check-umami-storage.mjs",
+      "kind": "check",
+      "line_count": 318,
+      "purpose": "Read-only capacity and growth check for the Railway Postgres volume backing\nthe external Umami service.\n\nRailway exposes the current volume size through `railway volume list`. The\nscheduled workflow supplies that JSON and carries a bounded sample history so\nthis check can alert on projected days-to-full as well as absolute usage.\nIt never connects to Postgres and never deletes data.",
+      "referenced_paths": [
+        "./lib/main-module.mjs"
+      ]
+    },
+    {
+      "file": "scripts/check-unicode-safety.mjs",
+      "kind": "check",
+      "line_count": 286,
+      "purpose": "Detect suspicious invisible Unicode in executable repository files.\n\nThreat model:\n- Trojan Source (bidi controls)\n- Zero-width/invisible control chars\n- Variation selector steganography / Unicode tags\n- Private Use Area payload hiding\n\nUsage:\n  node scripts/check-unicode-safety.mjs\n  node scripts/check-unicode-safety.mjs --staged",
+      "referenced_paths": []
+    },
+    {
+      "file": "scripts/check-vite-env-secrets.mjs",
+      "kind": "check",
+      "line_count": 88,
+      "purpose": "(no header comment found)",
+      "referenced_paths": [
+        "./lib/main-module.mjs"
+      ]
+    },
+    {
+      "file": "scripts/enforce-mintlify-reserved-slugs.mjs",
+      "kind": "enforce",
+      "line_count": 57,
+      "purpose": "Mintlify reserves /mcp and /authed/mcp for its auto-generated docs-as-MCP\nserver. A user-authored docs page at either slug is silently shadowed by\nthe MCP JSON-RPC handler — adjacent pages render fine, only the reserved\nslug 504s. There is no opt-out per Mintlify's docs.\nhttps://mintlify.com/docs/ai/model-context-protocol",
+      "referenced_paths": []
+    },
+    {
+      "file": "scripts/enforce-overlay-reload-policy.mjs",
+      "kind": "enforce",
+      "line_count": 495,
+      "purpose": "Keyed by the clauses of `MODAL_SELECTORS` in src/utils/open-modal.ts. The\nself-test pins `Object.keys` deep-equal to that tuple, so a selector clause\nadded there without a creation idiom here fails a test.\n\nkind:\n  'site'         counts as an overlay creation site. `re` captures the\n                 receiver token (group 1 or 2) when the form has one; the\n                 template form (`role=\"dialog\"` inside markup) has none.\n  'companion'    never stands alone in this tree (the scan reports any hit\n                 farther than SITE_CLUSTER_RADIUS_LINES from a 'site' hit,\n                 and the CLI fails on it), so it is not counted: one element\n                 setting role + aria-modal is one site.\n  'third-party'  no first-party creation form exists; must stay undeclared,\n                 and undeclared blocks.\n\n`probe` is the fixture each pattern must match; `negativeProbe` is a live\nshape that must NOT match, because `closest('[role=\"dialog\"]')` reads an\noverlay, it does not create one. The leading `(?<!\\[)` is what separates\nthe two.",
+      "referenced_paths": [
+        "./lib/main-module.mjs",
+        "./lib/source-scan.mjs"
+      ]
+    },
+    {
+      "file": "scripts/enforce-panel-content-writes.mjs",
+      "kind": "enforce",
+      "line_count": 353,
+      "purpose": "Idioms that mutate panel content without going through `Panel`. Each one\nskips the error-state clear that makes a render a recovery.\n\nThis is an enumerated blocklist over source text, NOT an exhaustive one — a\ngreen run means \"no KNOWN direct-write idiom outside the legacy set\", never\n\"a direct write is impossible\". A local alias (`const el = this.content`)\nstill slips through. The list started at four idioms and missed\n`MonitorPanel` and `PinnedWebcamsPanel` entirely, which is the argument for\nwidening it whenever a new idiom appears rather than reading silence as\nproof.\n\n`kind` drives the advice in the failure message, because the two categories\nneed different fixes:\n  - `replace` — the whole subtree is being swapped. `setContentNodes` /\n    `setTrustedContent` are drop-in replacements.\n  - `positional` — a node is added at a specific position, or removed, while\n    the rest of the content must survive. The sanctioned helpers WIPE, so\n    telling these call sites to \"render through setContentNodes\" would be\n    wrong: `SupplyChainPanel.prepend` runs under a live MutationObserver\n    watching the charts it would destroy, and `ProgressChartsPanel` inserts\n    per-chart while preserving a trailing tooltip. These need a structural\n    change, not a substitution.\n\n`insertAdjacentElement('beforebegin', …)` is tracked as `positional` for\ninventory completeness, but note it inserts a SIBLING of `this.content`, not\na child — it cannot latch the chip on its own.\n\n`probe` is the fixture the self-test matches each pattern against, so a\npattern that silently stops matching fails loudly instead of going quiet.\nThe receiver tolerates `?.` and `!.`: `this.content?.appendChild(row)` is a\nlive idiom in `EnergyCrisisPanel`, and a bare-dot-only pattern would miss it.",
+      "referenced_paths": [
+        "./lib/main-module.mjs",
+        "./lib/source-scan.mjs"
+      ]
+    },
+    {
+      "file": "scripts/enforce-premium-fetch.mjs",
+      "kind": "enforce",
+      "line_count": 471,
+      "purpose": "Validates that every `new <ServiceClient>(...)` instantiation in src/ which\ncalls a method whose generated path is in PREMIUM_RPC_PATHS is constructed\nwith `{ fetch: premiumFetch }`.\n\nCatches the HIGH(new) #1 class from #3242 review — SupplyChainServiceClient\nwas constructed with globalThis.fetch (the generated default) and pro users\nsilently got 401s the generated client swallowed into empty-fallback panels.\nSame class as #3233 (RegionalIntelligenceBoard / DeductionPanel / trade /\ncountry-intel) which was fixed manually because there was no enforcement.\n\nHow it works:\n  1. Dynamic `import()` of PREMIUM_RPC_PATHS from src/shared/premium-paths.ts\n     (via tsx, same pattern as enforce-rate-limit-policies.mjs) → set of\n     premium HTTP paths. Live import means reformatting the source literal\n     can never desync the lint from the runtime (#3287 follow-up).\n  2. Walk src/generated/client/ → map each ServiceClient class to its\n     method-name → path table (the `let path = \"/api/...\"` line each\n     generated method opens with).\n  3. Walk src/ (excluding generated) with the TypeScript AST. For each\n     `new <ClassName>(...)` (variable decl OR `this.foo =` assignment):\n       a. Capture the bound variable / member name.\n       b. Find every `<varName>.<method>(...)` call in the same file.\n       c. If any called method has a premium path, the construction MUST\n          use { fetch: premiumFetch }. Anything else fails the lint.\n\nPer-call-site analysis lets the trade/index.ts pattern (publicClient with\nglobalThis.fetch + premiumClient with premiumFetch on the same class)\nstay clean, since publicClient never calls a premium method.",
+      "referenced_paths": [
+        "./lib/main-module.mjs",
+        "src",
+        "src/generated/client",
+        "src/services/premium-fetch.ts",
+        "src/shared/premium-paths.ts"
+      ]
+    },
+    {
+      "file": "scripts/enforce-rate-limit-policies.mjs",
+      "kind": "enforce",
+      "line_count": 327,
+      "purpose": "Validates every key in ENDPOINT_RATE_POLICIES (server/_shared/rate-limit.ts)\nis a real gateway route by checking the OpenAPI specs generated from protos.\nCatches rename-drift that causes policies to become dead code (the\nsanctions-entity-search review finding — the policy key was\n`/api/sanctions/v1/lookup-entity` but the proto RPC generates path\n`/api/sanctions/v1/lookup-sanction-entity`, so the 30/min limit never\napplied and the endpoint fell through to the 600/min global limiter).\n\nRuns in the same pre-push + CI context as lint:api-contract. Invoked via\n`tsx` so it can import the policy object straight from the TS source\n(#3278) — the previous regex-parse implementation would silently break if\nthe source object literal was reformatted.\n\nPR #3821 r2: also resolves keys against api/api-route-exceptions.json so\ntop-level Vercel Edge Functions (e.g. /api/mcp-proxy, an external-protocol\nexception that can't flow through the gateway) can register a policy and\nenforce it in-handler via `checkScopedRateLimit` without becoming invisible\nto this audit. Without this branch, /api/mcp-proxy would silently slip\nthrough future endpoint-coverage checks even though it has a live limit.\n\nAlso validates three decision registries exported from rate-limit.ts:\n  - FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED: expensive/sensitive routes\n    that must have an endpoint policy so Redis degradation fails closed.\n  - GLOBAL_RATE_LIMIT_FALLBACK_READ_ROUTES: deliberately read-only gateway\n    routes that are allowed to inherit the global fail-open fallback.\n  - RATE_LIMIT_MUTATION_FALLBACK_EXEMPT: NON-GET routes deliberately allowed\n    to inherit the fail-open fallback (each with a justification).\n\n#4676 (systemic guardrail): enumerate EVERY non-GET (post/put/patch/delete)\nroute from the generated OpenAPI metadata and require each to be either\ncovered by ENDPOINT_RATE_POLICIES or explicitly listed in\nRATE_LIMIT_MUTATION_FALLBACK_EXEMPT. Previously the audit only checked\nregistry internal consistency, so an expensive/mutation route omitted from\nevery registry would pass CI and silently fail OPEN on a Redis outage. New\nnon-GET routes now have to be triaged into one bucket or the other.",
+      "referenced_paths": [
+        "api/api-route-exceptions.json",
+        "docs/api",
+        "server/_shared/rate-limit.ts"
+      ]
+    },
+    {
+      "file": "scripts/enforce-safe-html.mjs",
+      "kind": "enforce",
+      "line_count": 214,
+      "purpose": "(no header comment found)",
+      "referenced_paths": [
+        "./lib/main-module.mjs"
+      ]
+    },
+    {
+      "file": "scripts/enforce-safe-local-storage.mjs",
+      "kind": "enforce",
+      "line_count": 446,
+      "purpose": "Every syntactic shape that reaches THROUGH `localStorage` to something that\ncan throw when the store is null or its property getter throws.\n\nThese are matched on the TypeScript AST, not on source text. Three rounds of\nreview found three separate token classes a regex missed — whitespace around\nthe identifier's accessor, whitespace around the RECEIVER's accessor, and\nthe non-null assertion in `localStorage!.getItem(k)` (which `biome.json`\npermits, since `noNonNullAssertion` is off). Each round I patched the token\nand claimed the class was closed; each time the next round found another.\nHand-enumerating TypeScript's receiver syntax is the whack-a-mole, and the\nparser already does it exactly.\n\nThe AST also removes this gate's dependence on comment stripping — a comment\nsimply is not a node — which retires the blindness class that made the old\nregex scanner miss 1826 lines of `panel-layout.ts`.\n\n`probes` are the fixtures the self-test matches, so a matcher that silently\nstops recognizing a shape fails loudly instead of going quiet. Optional\nchaining (`localStorage?.getItem`) is deliberately still counted: it survives\nthe NULL shape but does nothing for the THROWING one, so on its own it is a\nhalf-guard. `safe-storage.ts` pairs it with a try/catch, which is why that\nfile — and only that file — is exempt.\n\nNOT closed by this, and not closable without type resolution: a local alias\n(`const ls = localStorage; ls.getItem(k)`) or a destructure. Those need the\nchecker, not the parser. They stay named in the header as known gaps.",
+      "referenced_paths": [
+        "./lib/main-module.mjs",
+        "./lib/source-scan.mjs"
+      ]
+    },
+    {
+      "file": "scripts/enforce-sebuf-api-contract.mjs",
+      "kind": "enforce",
+      "line_count": 347,
+      "purpose": "Sebuf API contract enforcement.\n\nEvery file under api/ must be one of:\n  1. A sebuf gateway — api/<kebab-domain>/v<N>/[rpc].ts paired with a\n     generated service_server under src/generated/server/worldmonitor/<snake_domain>/v<N>/.\n  2. A listed entry in api/api-route-exceptions.json with category, reason,\n     owner, and (for temporary categories) a removal_issue.\n\nAlso checks the reverse: every generated service has a gateway unless it is\nexplicitly deferred behind a tracked acceptance gate. Deferred entries are\nrejected once their service disappears or an HTTP gateway is added.\n\nSkips: underscore-prefixed helpers, *.test.*, and anything gitignored (the\ncompiled sidecar bundles at api/[[...path]].js and api/<domain>/v1/[rpc].js\nare build artifacts, not source).\n\nExit 0 clean, 1 on any violation. Output is agent-readable: file:line + remedy.",
+      "referenced_paths": [
+        "./lib/sebuf-deferred-services.mjs",
+        "./lib/sebuf-query-param-contract.mjs",
+        "api",
+        "src/generated/server/worldmonitor"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,283 @@
+{
+  "tool": "cors-scan",
+  "target_commit": "a1caad92c7488ebb6a1ed6a3a9aed7591f89aab0",
+  "checked_at": "2026-09-28T18:53:59.009Z",
+  "files_mentioning_acao": 24,
+  "files_evaluated": 13,
+  "canonical_helper_files": [
+    "api/_cors.js",
+    "server/cors.ts"
+  ],
+  "results": [
+    {
+      "file": "api/_agent-metadata.ts",
+      "isCanonicalHelper": false,
+      "isTest": false,
+      "hasLiteralWildcard": true,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "LOW",
+      "reason": "wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint"
+    },
+    {
+      "file": "api/_cors.js",
+      "isCanonicalHelper": true,
+      "isTest": false,
+      "hasLiteralWildcard": true,
+      "hasCredentialsTrue": true,
+      "importsSharedHelper": true,
+      "authMarkersHit": [],
+      "risk": "n/a",
+      "reason": "this IS the shared CORS helper — not an exception to itself"
+    },
+    {
+      "file": "api/_cors.test.mjs",
+      "isCanonicalHelper": false,
+      "isTest": true,
+      "hasLiteralWildcard": false,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": true,
+      "authMarkersHit": [],
+      "risk": "n/a",
+      "reason": "test file, not a live handler"
+    },
+    {
+      "file": "api/_rate-limit.test.mjs",
+      "isCanonicalHelper": false,
+      "isTest": true,
+      "hasLiteralWildcard": false,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "n/a",
+      "reason": "test file, not a live handler"
+    },
+    {
+      "file": "api/a2a.ts",
+      "isCanonicalHelper": false,
+      "isTest": false,
+      "hasLiteralWildcard": true,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "LOW",
+      "reason": "wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint"
+    },
+    {
+      "file": "api/agent-auth.ts",
+      "isCanonicalHelper": false,
+      "isTest": false,
+      "hasLiteralWildcard": true,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "LOW",
+      "reason": "wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint"
+    },
+    {
+      "file": "api/ask.ts",
+      "isCanonicalHelper": false,
+      "isTest": false,
+      "hasLiteralWildcard": true,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "LOW",
+      "reason": "wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint"
+    },
+    {
+      "file": "api/docs-mcp.ts",
+      "isCanonicalHelper": false,
+      "isTest": false,
+      "hasLiteralWildcard": true,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "LOW",
+      "reason": "wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint"
+    },
+    {
+      "file": "api/geo.js",
+      "isCanonicalHelper": false,
+      "isTest": false,
+      "hasLiteralWildcard": true,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "LOW",
+      "reason": "wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint"
+    },
+    {
+      "file": "api/http-message-signatures-directory.ts",
+      "isCanonicalHelper": false,
+      "isTest": false,
+      "hasLiteralWildcard": true,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "LOW",
+      "reason": "wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint"
+    },
+    {
+      "file": "api/md-twin.ts",
+      "isCanonicalHelper": false,
+      "isTest": false,
+      "hasLiteralWildcard": true,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "LOW",
+      "reason": "wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint"
+    },
+    {
+      "file": "api/oauth/authorize.js",
+      "isCanonicalHelper": false,
+      "isTest": false,
+      "hasLiteralWildcard": true,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "LOW",
+      "reason": "wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint"
+    },
+    {
+      "file": "api/oauth-authorization-server.ts",
+      "isCanonicalHelper": false,
+      "isTest": false,
+      "hasLiteralWildcard": true,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "LOW",
+      "reason": "wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint"
+    },
+    {
+      "file": "api/oauth-protected-resource.ts",
+      "isCanonicalHelper": false,
+      "isTest": false,
+      "hasLiteralWildcard": true,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "LOW",
+      "reason": "wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint"
+    },
+    {
+      "file": "api/rss-proxy.test.mjs",
+      "isCanonicalHelper": false,
+      "isTest": true,
+      "hasLiteralWildcard": false,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [
+        "headers\\s*(\\.get\\(|\\[)\\s*['\"]x-worldmonitor-key['\"]"
+      ],
+      "risk": "n/a",
+      "reason": "test file, not a live handler"
+    },
+    {
+      "file": "api/security/report.js",
+      "isCanonicalHelper": false,
+      "isTest": false,
+      "hasLiteralWildcard": true,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "LOW",
+      "reason": "wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint"
+    },
+    {
+      "file": "api/version.js",
+      "isCanonicalHelper": false,
+      "isTest": false,
+      "hasLiteralWildcard": true,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "LOW",
+      "reason": "wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint"
+    },
+    {
+      "file": "api/wm-session.test.mjs",
+      "isCanonicalHelper": false,
+      "isTest": true,
+      "hasLiteralWildcard": false,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [
+        "verifySession|requireAuth|validateApiKey"
+      ],
+      "risk": "n/a",
+      "reason": "test file, not a live handler"
+    },
+    {
+      "file": "server/__tests__/chat-analyst-quota.test.ts",
+      "isCanonicalHelper": false,
+      "isTest": true,
+      "hasLiteralWildcard": false,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": true,
+      "authMarkersHit": [],
+      "risk": "n/a",
+      "reason": "test file, not a live handler"
+    },
+    {
+      "file": "server/__tests__/entitlement-check.test.ts",
+      "isCanonicalHelper": false,
+      "isTest": true,
+      "hasLiteralWildcard": false,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "n/a",
+      "reason": "test file, not a live handler"
+    },
+    {
+      "file": "server/__tests__/gateway-head.test.ts",
+      "isCanonicalHelper": false,
+      "isTest": true,
+      "hasLiteralWildcard": false,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "n/a",
+      "reason": "test file, not a live handler"
+    },
+    {
+      "file": "server/__tests__/shipping-status-cache.test.ts",
+      "isCanonicalHelper": false,
+      "isTest": true,
+      "hasLiteralWildcard": false,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "n/a",
+      "reason": "test file, not a live handler"
+    },
+    {
+      "file": "server/__tests__/widget-agent-billing-denial.test.ts",
+      "isCanonicalHelper": false,
+      "isTest": true,
+      "hasLiteralWildcard": false,
+      "hasCredentialsTrue": false,
+      "importsSharedHelper": false,
+      "authMarkersHit": [],
+      "risk": "n/a",
+      "reason": "test file, not a live handler"
+    },
+    {
+      "file": "server/cors.ts",
+      "isCanonicalHelper": true,
+      "isTest": false,
+      "hasLiteralWildcard": false,
+      "hasCredentialsTrue": true,
+      "importsSharedHelper": true,
+      "authMarkersHit": [],
+      "risk": "n/a",
+      "reason": "this IS the shared CORS helper — not an exception to itself"
+    }
+  ],
+  "verdict": "VERIFIED-SECURE",
+  "verdict_note": "All 24 files that mention Access-Control-Allow-Origin either route through the shared, allowlist-validated CORS helper, or set a literal wildcard with no co-occurring credentials/auth marker (consistent with an intentionally public/anonymous surface, e.g. api/ask.ts's documented anonymous NLWeb endpoint). No HIGH/MEDIUM-risk wildcard+credentials or wildcard+auth combination found."
+}

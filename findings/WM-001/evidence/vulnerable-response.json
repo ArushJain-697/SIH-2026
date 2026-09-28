@@ -1,0 +1,26 @@
+{
+  "caller": "user-free-001",
+  "variant": "VULNERABLE",
+  "note": "no ownership filter applied — every matching row across every user is returned",
+  "count": 3,
+  "rows": [
+    {
+      "id": "rule-001",
+      "ownerId": "user-free-001",
+      "enabled": true,
+      "label": "Watch: Convoy movement, sector 7"
+    },
+    {
+      "id": "rule-003",
+      "ownerId": "user-pro-002",
+      "enabled": true,
+      "label": "Watch: Sanctioned-entity mention (private list)"
+    },
+    {
+      "id": "rule-004",
+      "ownerId": "user-pro-002",
+      "enabled": true,
+      "label": "Watch: Executive travel itinerary keyword"
+    }
+  ]
+}

@@ -1,0 +1,164 @@
+{
+  "$comment": "Prior-art register — build-map ticket #6 (CORE, FOUNDATION). Bible §2.2. These are the target's PUBLISHED advisories. They are prior art: reproduce them (labelled REPRODUCED-KNOWN) to validate the method, NEVER claim them as novel discoveries. A finding labelled CONFIRMED-NOVEL must be absent from this register.",
+  "target": "github.com/koala73/worldmonitor",
+  "source": "https://github.com/koala73/worldmonitor/security/advisories",
+  "verified_on": "2026-09-28",
+  "verification_note": "Re-scrape the Security > Advisories tab before relying on this; the maintainer publishes new advisories regularly.",
+  "count_published": 11,
+  "count_draft": 1,
+  "advisories": [
+    {
+      "id": "GHSA-r649-4cqj-w93h",
+      "severity": "High",
+      "title": "Unauthenticated cross-tenant read of all users' alert rules via public Convex query getByEnabled",
+      "class": "Broken Object Level Authorization (BOLA) / public-function authz",
+      "cwe": ["CWE-284", "CWE-639"],
+      "owasp_api": "API1:2023",
+      "seam": "isomorphic-sibling-path",
+      "platform": "Convex",
+      "published": "2026-07-04",
+      "demo_candidate": true
+    },
+    {
+      "id": "GHSA-2x6r-qq54-mmhr",
+      "severity": "High",
+      "title": "Windows command injection in Tauri open_url IPC (cmd /c start) - user-assisted desktop RCE",
+      "class": "Command injection / desktop IPC",
+      "cwe": ["CWE-78"],
+      "seam": "unguarded-sink",
+      "platform": "Tauri 2",
+      "published": "2026-07-04",
+      "demo_candidate": false
+    },
+    {
+      "id": "GHSA-5458-hq84-hcr5",
+      "severity": "High",
+      "title": "Desktop trusted windows could read the full secret cache and local API token",
+      "class": "Capability isolation / secret exposure",
+      "cwe": ["CWE-200"],
+      "seam": "control-exception",
+      "platform": "Tauri 2",
+      "published": "2026-07-24",
+      "demo_candidate": false
+    },
+    {
+      "id": "GHSA-c267-988w-7pq7",
+      "severity": "Moderate",
+      "title": "Abuse-control / rate-limit bypass via spoofable cf-connecting-ip header",
+      "class": "IP-trust / rate-limit bypass",
+      "cwe": ["CWE-290", "CWE-770"],
+      "owasp_api": "API4:2023",
+      "seam": "trusted-input-assumption",
+      "platform": "Cloudflare edge",
+      "published": "2026-07-04",
+      "demo_candidate": true
+    },
+    {
+      "id": "GHSA-hcq5-jm84-2395",
+      "severity": "Moderate",
+      "title": "MCP daily cost-cap bypass: quota slot refunded after the tool already executed",
+      "class": "Denial-of-Wallet / reserve-then-refund TOCTOU",
+      "cwe": ["CWE-770", "CWE-362"],
+      "owasp_api": "API4:2023",
+      "seam": "toctou-refund-race",
+      "platform": "MCP / Upstash",
+      "published": "2026-07-04",
+      "demo_candidate": true,
+      "note": "THE MONEY SHOT. Matches the Denial-of-Wallet 'Vector B' theory almost word-for-word. Theory + the target's own scar = un-dismissable."
+    },
+    {
+      "id": "GHSA-9m4c-824h-m4xw",
+      "severity": "Moderate",
+      "title": "Slack and Discord OAuth state consumption is non-atomic and fail-open",
+      "class": "Fail-open error handling / non-atomic state",
+      "cwe": ["CWE-362", "CWE-636"],
+      "seam": "fail-open-async",
+      "platform": "OAuth / Upstash",
+      "published": "2026-08-01",
+      "demo_candidate": false,
+      "note": "Direct evidence for the AI-seam thesis: 'non-atomic and fail-open' is the RLHF 'don't crash' pattern."
+    },
+    {
+      "id": "GHSA-cmj5-cfhr-w964",
+      "severity": "Moderate",
+      "title": "Generated API runtime validation is disabled",
+      "class": "Contract-vs-handler validation drift",
+      "cwe": ["CWE-20"],
+      "seam": "linter-satisfied-semantically-dead",
+      "platform": "Sebuf / protobuf",
+      "published": "2026-08-01",
+      "demo_candidate": false,
+      "note": "Direct evidence for the AI-seam thesis: the control exists syntactically but is switched off."
+    },
+    {
+      "id": "GHSA-gxj5-54wh-7vgr",
+      "severity": "Moderate",
+      "title": "Browser sessions can poison shared temporal baselines",
+      "class": "Shared-state poisoning",
+      "cwe": ["CWE-349"],
+      "seam": "shared-mutable-state",
+      "platform": "Upstash / app logic",
+      "published": "2026-09-04",
+      "demo_candidate": false
+    },
+    {
+      "id": "GHSA-9gp4-366w-pcq3",
+      "severity": "Moderate",
+      "title": "Weak (FNV-1a 52-bit) cache key in buildSummaryCacheKey allows unauthenticated poisoning of the shared summary/translation cache",
+      "class": "Weak hashing / cache poisoning",
+      "cwe": ["CWE-328", "CWE-349"],
+      "seam": "non-cryptographic-primitive",
+      "platform": "Upstash Redis",
+      "published": "2026-09-04",
+      "demo_candidate": false
+    },
+    {
+      "id": "GHSA-5j39-mmw6-cqw6",
+      "severity": "Moderate",
+      "title": "MCP SSE replay is not bound to the authenticated owner",
+      "class": "Session/replay binding",
+      "cwe": ["CWE-294"],
+      "seam": "missing-identity-binding",
+      "platform": "MCP",
+      "published": "2026-09-04",
+      "demo_candidate": false,
+      "note": "Sits exactly where the NSA MCP security paper predicts (token/session lifecycle unspecified by spec)."
+    },
+    {
+      "id": "GHSA-f6gj-3v7v-j75q",
+      "severity": "Low",
+      "title": "OAuth refresh-token reuse not contained: no family revocation on detected reuse",
+      "class": "Token-reuse containment",
+      "cwe": ["CWE-613"],
+      "seam": "incomplete-containment",
+      "platform": "OAuth",
+      "published": "2026-07-04",
+      "demo_candidate": false
+    },
+    {
+      "id": "GHSA-887j-p88r-qmm9",
+      "severity": "Moderate (accepted residual)",
+      "status": "draft / access-restricted until publication",
+      "title": "DNS-rebinding residual in the MCP proxy: Vercel Edge fetch cannot pin its socket to the vetted address",
+      "class": "SSRF residual (resolve-vs-connect TOCTOU)",
+      "cwe": ["CWE-918", "CWE-367"],
+      "owasp_api": "API7:2023",
+      "seam": "platform-limitation",
+      "platform": "Vercel Edge",
+      "demo_candidate": false,
+      "note": "Referenced openly in SECURITY.md. External anchor: vercel-labs/guarded-fetch implements the connect-time IP pinning that closes this class."
+    }
+  ],
+  "external_researcher_credits": [
+    {
+      "researcher": "Cody Richard",
+      "year": 2026,
+      "findings": [
+        "IPC command exposure",
+        "renderer-to-sidecar trust boundary analysis",
+        "fetch patch credential injection architecture"
+      ],
+      "source": "README.md Security Acknowledgments"
+    }
+  ]
+}

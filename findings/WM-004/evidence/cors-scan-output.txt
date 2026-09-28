@@ -1,0 +1,20 @@
+{
+  "files_mentioning_acao": 24,
+  "verdict": "VERIFIED-SECURE",
+  "high_or_medium_count": 0
+}
+
+All 24 files that mention Access-Control-Allow-Origin either route through the shared, allowlist-validated CORS helper, or set a literal wildcard with no co-occurring credentials/auth marker (consistent with an intentionally public/anonymous surface, e.g. api/ask.ts's documented anonymous NLWeb endpoint). No HIGH/MEDIUM-risk wildcard+credentials or wildcard+auth combination found.
+  [LOW] api/_agent-metadata.ts — wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint
+  [LOW] api/a2a.ts — wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint
+  [LOW] api/agent-auth.ts — wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint
+  [LOW] api/ask.ts — wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint
+  [LOW] api/docs-mcp.ts — wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint
+  [LOW] api/geo.js — wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint
+  [LOW] api/http-message-signatures-directory.ts — wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint
+  [LOW] api/md-twin.ts — wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint
+  [LOW] api/oauth/authorize.js — wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint
+  [LOW] api/oauth-authorization-server.ts — wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint
+  [LOW] api/oauth-protected-resource.ts — wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint
+  [LOW] api/security/report.js — wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint
+  [LOW] api/version.js — wildcard ACAO set independently of the shared helper, but no auth-sensitive marker found in this file — consistent with an intentionally public/anonymous endpoint

@@ -1,0 +1,18 @@
+{
+  "tool": "rate-limit-coverage-check",
+  "target_commit": "a1caad92c7488ebb6a1ed6a3a9aed7591f89aab0",
+  "checked_at": "2026-09-28T18:53:58.961Z",
+  "stats": {
+    "openapi_spec_files": 38,
+    "total_gateway_routes": 236,
+    "non_get_routes": 18,
+    "endpoint_policies": 59,
+    "fail_closed_required": 50,
+    "global_fallback_read_routes": 2,
+    "mutation_fallback_exempt": 3
+  },
+  "uncovered_non_get_routes": [],
+  "fail_closed_required_missing_policy": [],
+  "fail_open_opt_outs_in_runtime_code": [],
+  "verdict": "VERIFIED-SECURE"
+}
