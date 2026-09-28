@@ -5,24 +5,23 @@
   "component": "server/_shared/rate-limit.ts registries vs. all docs/api/*.openapi.json generated routes (real target source)",
   "trust_boundary": 6,
   "control_tested": "Independent re-derivation (own parser, own extraction method, no dependency on the target's own scripts/enforce-rate-limit-policies.mjs) of the systemic guardrail: 'every generated non-GET (mutation/spend) gateway route must be either rate-limited (ENDPOINT_RATE_POLICIES) or explicitly, justification-carrying exempt (RATE_LIMIT_MUTATION_FALLBACK_EXEMPT)', plus a re-check that every FAIL_CLOSED_ENDPOINT_RATE_POLICY_REQUIRED route actually has a policy, plus an independent grep for failClosed:false escape-hatch call sites in server/ and api/ runtime code.",
-
   "tags": {
-    "cwe": ["CWE-770", "CWE-841"],
+    "cwe": [
+      "CWE-770",
+      "CWE-841"
+    ],
     "wstg": "WSTG-BUSL-02"
   },
-
-  "description": "This is the project's clearest demonstration of the 'audit the auditor' methodology (bible §4/§9, build-map ticket #14). The target's own scripts/enforce-rate-limit-policies.mjs documents (in its own comments) a REAL historical seam bug it exists to prevent: 'the sanctions-entity-search review finding — the policy key was /api/sanctions/v1/lookup-entity but the proto RPC generates path /api/sanctions/v1/lookup-sanction-entity, so the 30/min limit never applied and the endpoint fell through to the 600/min global limiter.' That is a rename-drift seam between a control (the policy registry) and its real target — the exact class this project's thesis says an AI-assisted, CI-guarded codebase produces, described by the maintainer's own code, not invented by us. We independently re-implemented the check the maintainer added in response (a different data source — .openapi.json instead of .openapi.yaml — and a different extraction method — regex over the TS object literal instead of a dynamic tsx import) and ran it fresh against the live source at the pinned commit.",
-  "business_impact": "N/A (control held) — but the METHOD is the contribution: this demonstrates a reusable technique (independently re-deriving a maintainer's own systemic guardrail from a different code path) that generalizes to any CI-guarded codebase, which is exactly the 'reusable NTRO capability' framed in bible §7.",
+  "description": "This is the project's clearest demonstration of the 'audit the auditor' methodology (bible \u00a74/\u00a79, build-map ticket #14). The target's own scripts/enforce-rate-limit-policies.mjs documents (in its own comments) a REAL historical seam bug it exists to prevent: 'the sanctions-entity-search review finding \u2014 the policy key was /api/sanctions/v1/lookup-entity but the proto RPC generates path /api/sanctions/v1/lookup-sanction-entity, so the 30/min limit never applied and the endpoint fell through to the 600/min global limiter.' That is a rename-drift seam between a control (the policy registry) and its real target \u2014 the exact class this project's thesis says an AI-assisted, CI-guarded codebase produces, described by the maintainer's own code, not invented by us. We independently re-implemented the check the maintainer added in response (a different data source \u2014 .openapi.json instead of .openapi.yaml \u2014 and a different extraction method \u2014 regex over the TS object literal instead of a dynamic tsx import) and ran it fresh against the live source at the pinned commit.",
+  "business_impact": "N/A (control held) \u2014 but the METHOD is the contribution: this demonstrates a reusable technique (independently re-deriving a maintainer's own systemic guardrail from a different code path) that generalizes to any CI-guarded codebase, which is exactly the 'reusable NTRO capability' framed in bible \u00a77.",
   "remediation": "No fix required. Recommend re-running this check (framework/seam-linter/rate-limit-coverage-check.mjs) as a scheduled independent audit, since the target repo sees daily commit velocity and the guardrail is only as good as its most recent run.",
-
   "references": {
     "ghsa": null,
     "external": [
-      "scripts/enforce-rate-limit-policies.mjs (target's own documented seam bug — the sanctions-entity-search rename-drift)",
+      "scripts/enforce-rate-limit-policies.mjs (target's own documented seam bug \u2014 the sanctions-entity-search rename-drift)",
       "framework/seam-linter/rate-limit-coverage-check.mjs (our independent re-derivation)"
     ]
   },
-
   "evidence_summary": {
     "target_commit": "a1caad92c7488ebb6a1ed6a3a9aed7591f89aab0",
     "openapi_spec_files_parsed": 38,
@@ -33,5 +32,8 @@
     "uncovered_non_get_routes_found": 0,
     "fail_closed_required_missing_policy_found": 0,
     "fail_open_opt_outs_found": 0
-  }
+  },
+  "scope_areas": [
+    4
+  ]
 }

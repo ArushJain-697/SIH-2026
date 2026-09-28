@@ -1,29 +1,28 @@
 {
   "id": "WM-005",
-  "title": "Type-safety-silencing casts (as any / as unknown) near security-sensitive code manually reviewed — none found unsafe",
+  "title": "Type-safety-silencing casts (as any / as unknown) near security-sensitive code manually reviewed \u2014 none found unsafe",
   "status": "VERIFIED-SECURE",
   "component": "Full real target source: src/, api/, server/, convex/ (1724 non-test .ts/.tsx files)",
   "trust_boundary": 7,
   "control_tested": "Complete (not sampled) scan of every `as any` / `as unknown` occurrence in the real, live-cloned source for proximity (within 5 lines) to a curated list of security-sensitive markers (auth header reads, rate-limit calls, CORS headers, localStorage access, HTML sinks, premium-fetch/entitlement checks, JSON.parse of untrusted input). Every candidate surfaced was individually read in full context.",
-
   "tags": {
-    "cwe": ["CWE-704", "CWE-843"],
+    "cwe": [
+      "CWE-704",
+      "CWE-843"
+    ],
     "wstg": "WSTG-INPV-05"
   },
-
-  "description": "Bible §4 documents a specific class of AI-assisted-codebase vulnerability: a type cast (`as any`/`as unknown`) introduced to silence a TypeScript compiler error can, if placed carelessly, erase the type system's guarantee about the shape of security-relevant data (an auth token, an entitlement object, a validated input) right at the boundary where that guarantee mattered most. Rather than assume this pattern exists, we checked for it directly: every one of 262 real `as any`/`as unknown` occurrences across the entire non-generated, non-test source tree was scanned for proximity to a security-sensitive marker. Exactly 2 candidates surfaced (an initial pass found 4, but 2 were inside `.spec.ts` end-to-end test files our first exclusion pattern missed — fixed and re-run; see framework/seam-linter/cast-adjacency.mjs's own header comment for the false-positive note, same documented-not-hidden discipline as WM-004).",
-  "preconditions": "N/A — static analysis, no running instance required.",
+  "description": "Bible \u00a74 documents a specific class of AI-assisted-codebase vulnerability: a type cast (`as any`/`as unknown`) introduced to silence a TypeScript compiler error can, if placed carelessly, erase the type system's guarantee about the shape of security-relevant data (an auth token, an entitlement object, a validated input) right at the boundary where that guarantee mattered most. Rather than assume this pattern exists, we checked for it directly: every one of 262 real `as any`/`as unknown` occurrences across the entire non-generated, non-test source tree was scanned for proximity to a security-sensitive marker. Exactly 2 candidates surfaced (an initial pass found 4, but 2 were inside `.spec.ts` end-to-end test files our first exclusion pattern missed \u2014 fixed and re-run; see framework/seam-linter/cast-adjacency.mjs's own header comment for the false-positive note, same documented-not-hidden discipline as WM-004).",
+  "preconditions": "N/A \u2014 static analysis, no running instance required.",
   "business_impact": "N/A (control held). Reported because the methodology and its completeness are the contribution: 262 out of 262 real occurrences were accounted for, not sampled, and the 2 that warranted a closer look were read in full context rather than counted as findings on pattern-match alone.",
-  "remediation": "No fix required. `convex/apiPlanLimitUsage.ts:522` uses `(internal as any).<functionPath>` — a standard, widely-used Convex idiom for referencing a circularly-typed internal function reference; the function's RETURN VALUE is still explicitly type-asserted immediately after (`) as ActiveEntitlement[]`), so type safety on the data that actually flows through the security-relevant path is preserved. `src/app/event-handlers.ts:1164` casts `JSON.parse(raw)` to `unknown` (the textbook-safe choice, not `any`) when reading from localStorage, and is immediately followed by an explicit `Array.isArray` check and a type-predicate `.filter()` narrowing to `string` before the value is used anywhere — this is exemplary defensive parsing of untrusted storage data, not a boundary degradation. Non-null assertion (`!`) was intentionally out of scope for this pass — a reliable regex would need a real TypeScript AST parser to avoid false positives from `!=`/`!==`/logical negation; flagged as future work, same honest limitation already noted for the AST-based scripts/enforce-premium-fetch.mjs invariant.",
-
+  "remediation": "No fix required. `convex/apiPlanLimitUsage.ts:522` uses `(internal as any).<functionPath>` \u2014 a standard, widely-used Convex idiom for referencing a circularly-typed internal function reference; the function's RETURN VALUE is still explicitly type-asserted immediately after (`) as ActiveEntitlement[]`), so type safety on the data that actually flows through the security-relevant path is preserved. `src/app/event-handlers.ts:1164` casts `JSON.parse(raw)` to `unknown` (the textbook-safe choice, not `any`) when reading from localStorage, and is immediately followed by an explicit `Array.isArray` check and a type-predicate `.filter()` narrowing to `string` before the value is used anywhere \u2014 this is exemplary defensive parsing of untrusted storage data, not a boundary degradation. Non-null assertion (`!`) was intentionally out of scope for this pass \u2014 a reliable regex would need a real TypeScript AST parser to avoid false positives from `!=`/`!==`/logical negation; flagged as future work, same honest limitation already noted for the AST-based scripts/enforce-premium-fetch.mjs invariant.",
   "references": {
     "ghsa": null,
     "external": [
       "framework/seam-linter/cast-adjacency.mjs (this project's independent scan)",
-      "docs/WORLDMONITOR-SIH26163-BIBLE-v2.md §4 (the boundary-degradation class this tool tests for)"
+      "docs/WORLDMONITOR-SIH26163-BIBLE-v2.md \u00a74 (the boundary-degradation class this tool tests for)"
     ]
   },
-
   "evidence_summary": {
     "target_commit": "a1caad92c7488ebb6a1ed6a3a9aed7591f89aab0",
     "files_scanned": 1724,
@@ -32,5 +31,8 @@
     "false_positives_from_test_file_exclusion_gap": 2,
     "candidates_after_fix": 2,
     "candidates_confirmed_unsafe_after_manual_read": 0
-  }
+  },
+  "scope_areas": [
+    3
+  ]
 }

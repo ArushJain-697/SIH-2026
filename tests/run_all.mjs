@@ -12,8 +12,16 @@ import { spawnSync } from 'node:child_process';
 const ROOT = new URL('../', import.meta.url).pathname;
 
 const STEPS = [
+  // Safety-critical — run FIRST. If the host-allowlist guarantee is broken,
+  // nothing downstream can be trusted regardless of what else passes.
+  { name: 'SAFETY: safe-http probe host-allowlist', cmd: 'node', args: ['--test', 'tests/safe_http.test.mjs'] },
+  { name: 'SAFETY: no raw fetch() in scanners', cmd: 'node', args: ['tests/lint_no_raw_fetch.mjs'] },
   { name: 'unit tests (finding-rules)', cmd: 'node', args: ['--test', 'tests/unit.test.mjs'] },
   { name: 'unit tests (CVSS 3.1 calculator)', cmd: 'node', args: ['--test', 'tests/cvss31.test.mjs'] },
+  { name: 'unit tests (CVSS 4.0 calculator)', cmd: 'node', args: ['--test', 'tests/cvss40.test.mjs'] },
+  { name: 'unit tests (EPSS client)', cmd: 'node', args: ['--test', 'tests/epss.test.mjs'] },
+  { name: 'unit tests (priority engine)', cmd: 'node', args: ['--test', 'tests/priority.test.mjs'] },
+  { name: 'endpoint inventory (structural)', cmd: 'node', args: ['--test', 'tests/endpoints_inventory.test.mjs'] },
   { name: 'landmine scan', cmd: 'node', args: ['tests/scan_landmines.mjs'] },
   { name: 'finding schema validation', cmd: 'node', args: ['tests/validate_findings.mjs'] },
   { name: 'advisory-aware regression harness', cmd: 'node', args: ['framework/regression-harness/run.mjs'] },

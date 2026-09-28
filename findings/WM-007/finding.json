@@ -1,0 +1,37 @@
+{
+  "id": "WM-007",
+  "title": "Client-side storage content audited on the real running instance \u2014 SECURITY.md's 'no sensitive localStorage data' claim empirically confirmed",
+  "status": "VERIFIED-SECURE",
+  "component": "Real running instance (localhost:3000), browser localStorage/sessionStorage/cookies",
+  "trust_boundary": 7,
+  "control_tested": "Full content dump (not just key-name inspection) of all 27 real localStorage keys plus sessionStorage and cookies from the actual running app, each VALUE pattern-scanned for JWT shape, the target's own 'wm_<hex>' API-key format (seen in api/a2a.ts's own documentation), Bearer tokens, and generic secret/password/token assignment patterns.",
+  "tags": {
+    "cwe": [
+      "CWE-922"
+    ],
+    "wstg": "WSTG-CLNT-09"
+  },
+  "description": "docs/ground-truth.md records SECURITY.md's own claim: 'No sensitive data is stored in localStorage or sessionStorage.' Rather than accept a documentation claim at face value, this finding checks it empirically against the real running app. Every one of the app's 27 real localStorage keys was dumped in full (not sampled) and each value scanned for four credential-shaped patterns. Result: every key holds UI/layout preference state, feature-flag completion markers, or cached PUBLIC geopolitical data (Country Instability Index scores, theater posture, disabled-feed source-name lists) \u2014 zero credential-shaped hits. sessionStorage held one benign viewed-panel tracker. No cookies were set at all for this unauthenticated session.",
+  "preconditions": "The real instance running on localhost:3000, an unauthenticated/default session (no sign-in attempted, consistent with docs/ROE.md's no-account-creation rule).",
+  "business_impact": "N/A (control held). This is a genuine, real, dynamic confirmation of a documented security claim, spanning PS scope areas 5 (client-side security) and 7 (data storage & privacy) simultaneously. An unauthenticated session was deliberately used, consistent with the project's ethics constraints; a signed-in Pro session was not tested (no account was created), so this verdict covers the anonymous surface only.",
+  "remediation": "No fix required for the surface tested. Recommend the same audit be repeated for an authenticated/Pro session in any future engagement with team-authorized credentials, since entitlement or session-adjacent state could plausibly differ from the anonymous default this assessment was limited to.",
+  "references": {
+    "ghsa": null,
+    "external": [
+      "docs/ground-truth.md (the SECURITY.md claim this finding verifies)",
+      "findings/WM-005/ (the companion static analysis of localStorage-writing code paths)"
+    ]
+  },
+  "evidence_summary": {
+    "instance": "localhost:3000 (real running app, unauthenticated session)",
+    "localstorage_keys_scanned": 27,
+    "credential_shaped_hits": 0,
+    "sessionstorage_keys": 1,
+    "cookies_set": false,
+    "session_type": "unauthenticated (no account created, per docs/ROE.md)"
+  },
+  "scope_areas": [
+    5,
+    7
+  ]
+}

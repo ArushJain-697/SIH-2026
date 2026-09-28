@@ -1,16 +1,20 @@
 {
   "name": "worldmonitor-sih26163-assessment",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "SIH 26163 — WorldMonitor security assessment: advisory-aware Seam-Linter, regression harness, and minimal local reproductions. Zero external dependencies by design (Node 18+ only).",
+  "description": "SIH 26163 — WorldMonitor security assessment: advisory-aware Seam-Linter, CVSS 3.1+4.0 + EPSS scoring, a safety-enforced dynamic probe against a real running local instance, and minimal local reproductions. Zero external dependencies by design (Node 18+ only).",
   "type": "module",
   "scripts": {
     "test": "node tests/run_all.mjs",
     "fetch-target": "bash lab/fetch-target-source.sh",
+    "instance:install": "cd .cache/worldmonitor-src && npm install",
+    "instance:up": "cd .cache/worldmonitor-src && npm run dev",
     "seam-lint": "node framework/seam-linter/analyze-invariants.mjs .cache/worldmonitor-src && node framework/seam-linter/rate-limit-coverage-check.mjs .cache/worldmonitor-src && node framework/seam-linter/cors-scan.mjs .cache/worldmonitor-src && node framework/seam-linter/cast-adjacency.mjs .cache/worldmonitor-src && node framework/seam-linter/chronological-orphans.mjs",
+    "dynamic-scan": "node engine/scanners/secure-comms.mjs http://localhost:3000/ .cache/worldmonitor-src",
     "regress": "node framework/regression-harness/run.mjs",
     "validate-findings": "node tests/validate_findings.mjs",
     "scan-landmines": "node tests/scan_landmines.mjs",
+    "lint-safety": "node tests/lint_no_raw_fetch.mjs",
     "proof-spine": "node framework/generate-proof-spine.mjs",
     "report": "node framework/generate-report.mjs"
   },

@@ -1,0 +1,39 @@
+{
+  "id": "WM-006",
+  "title": "Production security header posture (CSP/HSTS/XFO/etc.) evaluated dynamically + statically \u2014 hardened, one minor non-exploitable CSP gap",
+  "status": "VERIFIED-SECURE",
+  "component": "Real running instance (localhost:3000, dynamic pass) + real vercel.json (static, production-declared pass)",
+  "trust_boundary": 6,
+  "control_tested": "Dynamic: real HTTP response headers captured from the actual running app via the sanctioned safe-http probe. Static: the real, live-cloned vercel.json's declared production header policy, parsed and evaluated with a real CSP-directive evaluator (not just presence/absence) covering unsafe-inline/unsafe-eval, object-src, base-uri, frame-ancestors, and nonce/hash/strict-dynamic usage.",
+  "tags": {
+    "cwe": [
+      "CWE-693",
+      "CWE-1021"
+    ],
+    "wstg": "WSTG-CLNT-09"
+  },
+  "description": "This finding does two things deliberately, not one. First, it demonstrates a real methodological trap and avoids it: the local `vite` dev server (what `npm run dev` starts) returns almost no security headers (1/12 on our weighted scale), because Vercel's `vercel.json` `headers` block is applied by Vercel's own edge network on a real deployment, a layer the plain dev server never passes through. A dynamic-only assessment against `npm run dev` would have wrongly concluded WorldMonitor ships essentially no security headers. Second, having caught that, we evaluated the REAL production-declared policy from the actual `vercel.json` (9/12, with a real CSP directive evaluator, not a header-presence checklist): a strict-dynamic, nonce+hash-based Content-Security-Policy (not the common unsafe-inline shortcut), `object-src 'none'`, `base-uri 'self'`, a restrictive `frame-ancestors`, HSTS with `preload`, `X-Frame-Options: SAMEORIGIN`, and `Referrer-Policy: strict-origin-when-cross-origin`. Exactly one real, precise issue was found: `style-src` allows `'unsafe-inline'`. Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy are shipped as their `-Report-Only` variants, not enforcing \u2014 a legitimate, common progressive-rollout pattern (observe reports before breaking legitimate cross-origin behavior), not a bug.",
+  "preconditions": "Dynamic pass needs the real instance running on localhost:3000 (see lab/README.md). Static pass needs the real cloned source.",
+  "business_impact": "N/A (control held; the one real finding \u2014 style-src unsafe-inline \u2014 permits CSS injection in a successful XSS scenario to exfiltrate data via CSS selectors or deface via injected styles, but does NOT enable script execution, since script-src has no unsafe-inline and is properly nonce/hash-gated with strict-dynamic. This is a defense-in-depth gap, not an independently exploitable vulnerability.",
+  "remediation": "If practical, migrate inline styles to either external stylesheets or nonce/hash-gated style tags to close style-src's unsafe-inline the same way script-src already is (this is genuinely harder for CSS than JS in most frameworks and is a reasonable, common trade-off many hardened apps accept \u2014 not an urgent fix). No action needed for COOP/COEP being Report-Only if the team is actively monitoring the report endpoint (`/api/security/report`, which the app does define) before flipping to enforcing mode \u2014 recommend confirming that monitoring is active and setting a target date to enforce.",
+  "references": {
+    "ghsa": null,
+    "external": [
+      "engine/scanners/secure-comms.mjs (this project's dynamic+static scanner)",
+      "https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP",
+      "https://owasp.org/www-project-secure-headers/"
+    ]
+  },
+  "evidence_summary": {
+    "instance": "localhost:3000 (real running app)",
+    "dynamic_pass_score": "1/12",
+    "static_pass_score": "9/12",
+    "csp_uses_nonce_or_hash": true,
+    "csp_uses_strict_dynamic": true,
+    "real_issues_found": 1,
+    "issue": "style-src 'unsafe-inline' (non-exploitable without a separate script-injection primitive)"
+  },
+  "scope_areas": [
+    6
+  ]
+}

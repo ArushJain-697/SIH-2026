@@ -21,6 +21,19 @@ export const STATUS_VALUES = [
   'VERIFIED-SECURE',
 ];
 
+// The PS's own seven scope areas, verbatim order — index 0 is unused so
+// SCOPE_AREAS[n] reads naturally for n in 1..7.
+export const SCOPE_AREAS = [
+  null,
+  'Authentication & session management',
+  'Authorization & access control',
+  'Input validation & data handling',
+  'API security',
+  'Client-side security controls',
+  'Secure communication mechanisms',
+  'Data storage & privacy protections',
+];
+
 const CVSS31_RE = /^CVSS:3\.1\/AV:[NALP]\/AC:[LH]\/PR:[NLH]\/UI:[NR]\/S:[UC]\/C:[NLH]\/I:[NLH]\/A:[NLH]$/;
 const CVSS40_RE = /^CVSS:4\.0\//;
 
@@ -122,6 +135,20 @@ export function validateFinding(finding, opts = {}) {
   if (!isNonEmptyString(finding.description)) errors.push('description is required');
   if (!isNonEmptyString(finding.business_impact)) errors.push('business_impact is required');
   if (!isNonEmptyString(finding.remediation)) errors.push('remediation is required');
+
+  // --- PS scope-area coverage (build-map-advanced ticket #B3) ---
+  // An array, not a single value: a finding is allowed to genuinely span
+  // more than one PS scope area (WM-007's localStorage audit is real
+  // evidence for BOTH area 5 "Client-side security" and area 7 "Data
+  // storage & privacy" — forcing a single value would have meant either
+  // under-claiming coverage or picking an arbitrary primary). This is what
+  // lets docs/coverage-matrix.md be regenerated FROM the findings instead
+  // of hand-maintained.
+  if (!Array.isArray(finding.scope_areas) || finding.scope_areas.length === 0) {
+    errors.push('scope_areas is required and must be a non-empty array of PS scope-area numbers 1-7 (proves which PS requirement(s) this finding covers)');
+  } else if (!finding.scope_areas.every((n) => Number.isInteger(n) && n >= 1 && n <= 7)) {
+    errors.push('scope_areas must contain only integers 1-7');
+  }
 
   return { valid: errors.length === 0, errors };
 }

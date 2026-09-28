@@ -4,7 +4,6 @@
   "status": "REPRODUCED-KNOWN",
   "component": "lab/repro-services/bola-mock (minimal reproduction of a Convex-style public query)",
   "trust_boundary": 5,
-
   "severity": {
     "cvss31_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
     "cvss31_score": 6.5,
@@ -12,27 +11,29 @@
     "epss": null
   },
   "epss_note": "No CVE assigned to this finding (it is a reproduction of the already-published, already-scored GHSA-r649-4cqj-w93h, not a new CVE). CERT-In's dual CVSS+EPSS mandate is discussed qualitatively in the report: BOLA against a predictable/enumerable endpoint is highly automatable (see Automatable: Yes under CVSS 4.0), which is the property EPSS-style likelihood scoring would weight heavily.",
-
   "tags": {
-    "cwe": ["CWE-284", "CWE-639"],
+    "cwe": [
+      "CWE-284",
+      "CWE-639"
+    ],
     "wstg": "WSTG-ATHZ-02",
     "owasp_api": "API1:2023"
   },
-
   "lab_commit": "a1caad92c7488ebb6a1ed6a3a9aed7591f89aab0",
   "reproduce_script": "findings/WM-001/reproduce.sh",
   "control_tested": null,
-
-  "description": "A 'public query' style endpoint (the pattern Convex's own documentation warns about: 'public functions can be called by anyone, including potentially malicious users') filters results only on a content parameter (enabled=true) and never on caller identity. Any authenticated (or even just any) caller receives every user's rows, not only their own. This is a faithful minimal reproduction of the class described in GHSA-r649-4cqj-w93h ('Unauthenticated cross-tenant read of all users' alert rules via public Convex query getByEnabled'), NOT the live WorldMonitor/Convex deployment — we hold no credentials for the real project and did not attempt to obtain any. See lab/repro-services/bola-mock/README.md for the exact modeling decision.",
+  "description": "A 'public query' style endpoint (the pattern Convex's own documentation warns about: 'public functions can be called by anyone, including potentially malicious users') filters results only on a content parameter (enabled=true) and never on caller identity. Any authenticated (or even just any) caller receives every user's rows, not only their own. This is a faithful minimal reproduction of the class described in GHSA-r649-4cqj-w93h ('Unauthenticated cross-tenant read of all users' alert rules via public Convex query getByEnabled'), NOT the live WorldMonitor/Convex deployment \u2014 we hold no credentials for the real project and did not attempt to obtain any. See lab/repro-services/bola-mock/README.md for the exact modeling decision.",
   "preconditions": "Caller can reach the endpoint (no special privilege needed in the vulnerable variant). Two seeded synthetic accounts used: user-free-001 (attacker/caller) and user-pro-002 (victim).",
-  "business_impact": "In the real advisory's own words this exposed 'all users' alert rules' — for WorldMonitor specifically, alert-rule content can include Pro-tier watch criteria (private keyword lists, entity/itinerary monitors), so the class directly threatens the confidentiality of paying customers' operational focus, which is itself sensitive OSINT/analyst tradecraft. Loss of trust in a Pro-gated feature is a direct revenue and reputational risk.",
-  "remediation": "Filter every public query result by the caller's authenticated identity (ctx.auth-equivalent, never a client-supplied field) before returning rows — exactly the fix pattern demonstrated in lab/repro-services/bola-mock/patched.mjs and prescribed in Convex's own documentation (see docs/ground-truth.md). The real advisory's own fix (already shipped, per its published status) presumably follows this same pattern; we did not have access to the actual patch diff to confirm the exact implementation.",
-
+  "business_impact": "In the real advisory's own words this exposed 'all users' alert rules' \u2014 for WorldMonitor specifically, alert-rule content can include Pro-tier watch criteria (private keyword lists, entity/itinerary monitors), so the class directly threatens the confidentiality of paying customers' operational focus, which is itself sensitive OSINT/analyst tradecraft. Loss of trust in a Pro-gated feature is a direct revenue and reputational risk.",
+  "remediation": "Filter every public query result by the caller's authenticated identity (ctx.auth-equivalent, never a client-supplied field) before returning rows \u2014 exactly the fix pattern demonstrated in lab/repro-services/bola-mock/patched.mjs and prescribed in Convex's own documentation (see docs/ground-truth.md). The real advisory's own fix (already shipped, per its published status) presumably follows this same pattern; we did not have access to the actual patch diff to confirm the exact implementation.",
   "references": {
     "ghsa": "GHSA-r649-4cqj-w93h",
     "external": [
       "https://stack.convex.dev/authorization",
       "https://docs.convex.dev/understanding/best-practices/"
     ]
-  }
+  },
+  "scope_areas": [
+    2
+  ]
 }

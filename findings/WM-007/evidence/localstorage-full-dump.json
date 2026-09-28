@@ -1,0 +1,25 @@
+{
+  "captured_from": "http://localhost:3000/ (real running instance, unauthenticated session)",
+  "captured_at": "2026-09-28T22:09Z",
+  "method": "built-in browser javascript_exec, document.localStorage/.sessionStorage/.cookie inspected directly",
+  "localStorage_key_count": 27,
+  "localStorage_keys": [
+    "worldmonitor-canada-roads-opt-in-v1","worldmonitor-sources-reduction-v3","panel-order-bottom-set",
+    "worldmonitor-unified-panels-v1","worldmonitor-panel-order-v1.9","worldmonitor-panel-layout-variant",
+    "worldmonitor-regional-feed-rollout-reconcile-v1","worldmonitor-curated-regional-optin-v1","wm:theater-posture",
+    "worldmonitor-panel-prune-v1","worldmonitor-layout-reset-v2.5","worldmonitor-free-map-panel-access-v1",
+    "worldmonitor-strategic-defaults-enable-v1","worldmonitor-canada-arctic-optin-v1","worldmonitor-frontline-europe-enable-v1",
+    "worldmonitor-free-tier-source-ownership","worldmonitor-tabs-v1:full","worldmonitor-disabled-feeds-schema",
+    "wm:risk-scores","worldmonitor-panels","worldmonitor-disabled-feeds","panel-order",
+    "worldmonitor-crisis-desk-optin-v1","worldmonitor-variant","worldmonitor-panel-key-renames-v2.6.8",
+    "worldmonitor-free-tier-layer-ownership","worldmonitor-canada-depth-optin-v1"
+  ],
+  "value_content_classification": "UI layout/panel preferences, feature-flag 'done' markers, cached public geopolitical data (CII risk scores, theater posture), disabled-feed source-name lists. No credential, token, session-identifier, or PII-shaped content in any value.",
+  "credential_pattern_scan": {
+    "patterns_checked": ["jwt_like (eyJ...)", "wm_api_key (wm_[hex]{20,})", "bearer_token", "generic_secret_key/password/token assignment"],
+    "hits": [],
+    "keys_scanned": 27
+  },
+  "sessionStorage": { "key_count": 1, "keys": {"wm-panel-viewed-v1": "[\"live-news\"]"} },
+  "cookies_set": false
+}

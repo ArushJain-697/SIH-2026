@@ -1,0 +1,267 @@
+{
+  "tool": "secure-comms-scanner",
+  "scope_area": 6,
+  "checked_at": "2026-09-28T22:08:09.006Z",
+  "instance_url": "http://localhost:3000/",
+  "dynamic_pass": {
+    "error": null,
+    "headers_observed": {
+      "cache-control": "no-cache",
+      "connection": "keep-alive",
+      "content-length": "44910",
+      "content-type": "text/html",
+      "date": "Mon, 28 Sep 2026 22:08:09 GMT",
+      "etag": "W/\"af6e-t6A0kwxe5hIciTbl2LPIibcvQ/w\"",
+      "keep-alive": "timeout=5",
+      "origin-agent-cluster": "?1",
+      "permissions-policy": "tools=(self)",
+      "vary": "Origin"
+    },
+    "security_header_presence": [
+      {
+        "key": "content-security-policy",
+        "label": "Content-Security-Policy",
+        "weight": 3,
+        "present": false,
+        "value": null
+      },
+      {
+        "key": "strict-transport-security",
+        "label": "Strict-Transport-Security",
+        "weight": 2,
+        "present": false,
+        "value": null
+      },
+      {
+        "key": "x-content-type-options",
+        "label": "X-Content-Type-Options",
+        "weight": 1,
+        "present": false,
+        "value": null
+      },
+      {
+        "key": "x-frame-options",
+        "label": "X-Frame-Options",
+        "weight": 1,
+        "present": false,
+        "value": null
+      },
+      {
+        "key": "referrer-policy",
+        "label": "Referrer-Policy",
+        "weight": 1,
+        "present": false,
+        "value": null
+      },
+      {
+        "key": "permissions-policy",
+        "label": "Permissions-Policy",
+        "weight": 1,
+        "present": true,
+        "value": "tools=(self)"
+      },
+      {
+        "key": "cross-origin-opener-policy",
+        "label": "Cross-Origin-Opener-Policy",
+        "weight": 1,
+        "present": false,
+        "value": null
+      },
+      {
+        "key": "cross-origin-embedder-policy",
+        "label": "Cross-Origin-Embedder-Policy",
+        "weight": 1,
+        "present": false,
+        "value": null
+      },
+      {
+        "key": "cross-origin-resource-policy",
+        "label": "Cross-Origin-Resource-Policy",
+        "weight": 1,
+        "present": false,
+        "value": null
+      }
+    ],
+    "score": "1/12"
+  },
+  "static_pass_production_declared": {
+    "source_pattern": "/((?!docs|embed|embed\\.html|wm-widget-sandbox\\.html).*)",
+    "security_header_presence": [
+      {
+        "key": "content-security-policy",
+        "label": "Content-Security-Policy",
+        "weight": 3,
+        "present": true,
+        "value": "default-src 'self'; connect-src 'self' https: wss: blob: data: https://*.ingest.sentry.io https://*.ingest.us.sentry.io; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'strict-dynamic' 'nonce-wm-static-bootstrap' 'sha256-h0RiSjzitWmlVHuHxDHV1z/h7io4rveTmT0yR7CKaJ0=' 'sha256-5Z9IhMFGUf29PVDaWoiTpwEg7J7Q4r4F49rLS77PJm0=' 'sha256-Z5TaQuwFMHlxoFSQYuTWfxuPE5RUOpVsZOttUGCcRNE=' 'sha256-Jgh3W4Qj3HWZPVSti0C073yuiaz611LO8OZRUCsN0x8=' 'sha256-llBxZlyh3eu6gbNvZXaeD9oZE2jgTvnh72FEO/GDErQ=' 'sha256-qBy8dsjFg+wfik0vT6vqHdUfbfSdoK+3noanAXUt4mk=' 'sha256-sMkhxXs3qUW2IR01a4d3tL1e2XQV0XUwxXAeL31nDjM=' 'wasm-unsafe-eval'; worker-src 'self' blob:; font-src 'self' data:; media-src 'self' data: blob: https:; frame-src 'self' https://www.worldmonitor.app https://worldmonitor.app https://tech.worldmonitor.app https://finance.worldmonitor.app https://commodity.worldmonitor.app https://happy.worldmonitor.app https://energy.worldmonitor.app https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com https://webcams.windy.com https://challenges.cloudflare.com https://*.clerk.accounts.dev https://clerk.worldmonitor.app https://vercel.live https://*.dodopayments.com https://checkout.dodopayments.com https://test.checkout.dodopayments.com https://*.hs.dodopayments.com https://*.custom.hs.dodopayments.com https://pay.google.com https://hooks.stripe.com https://js.stripe.com; frame-ancestors 'self' https://www.worldmonitor.app https://tech.worldmonitor.app https://finance.worldmonitor.app https://commodity.worldmonitor.app https://happy.worldmonitor.app https://energy.worldmonitor.app https://worldmonitor.app https://vercel.live; base-uri 'self'; object-src 'none'; form-action 'self' https://api.worldmonitor.app"
+      },
+      {
+        "key": "strict-transport-security",
+        "label": "Strict-Transport-Security",
+        "weight": 2,
+        "present": true,
+        "value": "max-age=63072000; includeSubDomains; preload"
+      },
+      {
+        "key": "x-content-type-options",
+        "label": "X-Content-Type-Options",
+        "weight": 1,
+        "present": true,
+        "value": "nosniff"
+      },
+      {
+        "key": "x-frame-options",
+        "label": "X-Frame-Options",
+        "weight": 1,
+        "present": true,
+        "value": "SAMEORIGIN"
+      },
+      {
+        "key": "referrer-policy",
+        "label": "Referrer-Policy",
+        "weight": 1,
+        "present": true,
+        "value": "strict-origin-when-cross-origin"
+      },
+      {
+        "key": "permissions-policy",
+        "label": "Permissions-Policy",
+        "weight": 1,
+        "present": true,
+        "value": "camera=(), microphone=(), geolocation=(self), accelerometer=(), autoplay=(self \"https://www.youtube.com\" \"https://www.youtube-nocookie.com\"), bluetooth=(), display-capture=(), encrypted-media=(self \"https://www.youtube.com\" \"https://www.youtube-nocookie.com\"), gyroscope=(), hid=(), idle-detection=(), magnetometer=(), midi=(), payment=(self \"https://checkout.dodopayments.com\" \"https://test.checkout.dodopayments.com\" \"https://pay.google.com\" \"https://hooks.stripe.com\" \"https://js.stripe.com\"), picture-in-picture=(self \"https://www.youtube.com\" \"https://www.youtube-nocookie.com\" \"https://challenges.cloudflare.com\"), unload=(*), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=(\"https://challenges.cloudflare.com\"), tools=(self)"
+      },
+      {
+        "key": "cross-origin-opener-policy",
+        "label": "Cross-Origin-Opener-Policy",
+        "weight": 1,
+        "present": false,
+        "value": null
+      },
+      {
+        "key": "cross-origin-embedder-policy",
+        "label": "Cross-Origin-Embedder-Policy",
+        "weight": 1,
+        "present": false,
+        "value": null
+      },
+      {
+        "key": "cross-origin-resource-policy",
+        "label": "Cross-Origin-Resource-Policy",
+        "weight": 1,
+        "present": false,
+        "value": null
+      }
+    ],
+    "score": "9/12",
+    "csp_evaluation": {
+      "present": true,
+      "directive_count": 13,
+      "uses_nonce_or_hash": true,
+      "uses_strict_dynamic": true,
+      "issues": [
+        "style-src allows 'unsafe-inline' (lower severity than script — no code exec, but CSS-exfil/UI-redress surface)"
+      ],
+      "directives": {
+        "default-src": [
+          "'self'"
+        ],
+        "connect-src": [
+          "'self'",
+          "https:",
+          "wss:",
+          "blob:",
+          "data:",
+          "https://*.ingest.sentry.io",
+          "https://*.ingest.us.sentry.io"
+        ],
+        "img-src": [
+          "'self'",
+          "data:",
+          "blob:",
+          "https:"
+        ],
+        "style-src": [
+          "'self'",
+          "'unsafe-inline'"
+        ],
+        "script-src": [
+          "'self'",
+          "'strict-dynamic'",
+          "'nonce-wm-static-bootstrap'",
+          "'sha256-h0RiSjzitWmlVHuHxDHV1z/h7io4rveTmT0yR7CKaJ0='",
+          "'sha256-5Z9IhMFGUf29PVDaWoiTpwEg7J7Q4r4F49rLS77PJm0='",
+          "'sha256-Z5TaQuwFMHlxoFSQYuTWfxuPE5RUOpVsZOttUGCcRNE='",
+          "'sha256-Jgh3W4Qj3HWZPVSti0C073yuiaz611LO8OZRUCsN0x8='",
+          "'sha256-llBxZlyh3eu6gbNvZXaeD9oZE2jgTvnh72FEO/GDErQ='",
+          "'sha256-qBy8dsjFg+wfik0vT6vqHdUfbfSdoK+3noanAXUt4mk='",
+          "'sha256-sMkhxXs3qUW2IR01a4d3tL1e2XQV0XUwxXAeL31nDjM='",
+          "'wasm-unsafe-eval'"
+        ],
+        "worker-src": [
+          "'self'",
+          "blob:"
+        ],
+        "font-src": [
+          "'self'",
+          "data:"
+        ],
+        "media-src": [
+          "'self'",
+          "data:",
+          "blob:",
+          "https:"
+        ],
+        "frame-src": [
+          "'self'",
+          "https://www.worldmonitor.app",
+          "https://worldmonitor.app",
+          "https://tech.worldmonitor.app",
+          "https://finance.worldmonitor.app",
+          "https://commodity.worldmonitor.app",
+          "https://happy.worldmonitor.app",
+          "https://energy.worldmonitor.app",
+          "https://www.youtube.com",
+          "https://www.youtube-nocookie.com",
+          "https://www.google.com",
+          "https://webcams.windy.com",
+          "https://challenges.cloudflare.com",
+          "https://*.clerk.accounts.dev",
+          "https://clerk.worldmonitor.app",
+          "https://vercel.live",
+          "https://*.dodopayments.com",
+          "https://checkout.dodopayments.com",
+          "https://test.checkout.dodopayments.com",
+          "https://*.hs.dodopayments.com",
+          "https://*.custom.hs.dodopayments.com",
+          "https://pay.google.com",
+          "https://hooks.stripe.com",
+          "https://js.stripe.com"
+        ],
+        "frame-ancestors": [
+          "'self'",
+          "https://www.worldmonitor.app",
+          "https://tech.worldmonitor.app",
+          "https://finance.worldmonitor.app",
+          "https://commodity.worldmonitor.app",
+          "https://happy.worldmonitor.app",
+          "https://energy.worldmonitor.app",
+          "https://worldmonitor.app",
+          "https://vercel.live"
+        ],
+        "base-uri": [
+          "'self'"
+        ],
+        "object-src": [
+          "'none'"
+        ],
+        "form-action": [
+          "'self'",
+          "https://api.worldmonitor.app"
+        ]
+      }
+    }
+  },
+  "the_gap": {
+    "note": "The dev server (1/12) shows FEWER security headers than the production-declared config (9/12) because Vercel applies vercel.json's headers block at its edge network, which the plain `vite` dev server never sees. A dynamic-only assessment against `npm run dev` would wrongly conclude the app ships no security headers. Both passes are reported precisely so this gap is explicit, not silently either overclaimed or underclaimed."
+  },
+  "verdict": "CANDIDATE-UNCONFIRMED"
+}

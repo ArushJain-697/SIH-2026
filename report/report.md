@@ -1,13 +1,13 @@
 # WorldMonitor Security Assessment — Report
 ### SIH 26163 · NTRO · "No Finding Without Proof"
 
-**Generated:** 2026-09-28T19:17:19.220Z (auto-assembled by `framework/generate-report.mjs` from `register/advisories.json` + `findings/*/finding.json` — do not hand-edit this file, edit the sources and regenerate)
+**Generated:** 2026-09-28T22:12:44.263Z (auto-assembled by `framework/generate-report.mjs` from `register/advisories.json` + `findings/*/finding.json` — do not hand-edit this file, edit the sources and regenerate)
 
 ---
 
 ## 1. Executive summary
 
-This is a time-boxed, authorized security assessment of `github.com/koala73/worldmonitor` (the "World Monitor" real-time intelligence dashboard). All active proof-of-concept work ran against local, minimal, faithful reproduction harnesses we built and controlled — **never against the live `worldmonitor.app` deployment or any real user data** — per `docs/ROE.md`.
+This is a time-boxed, authorized security assessment of `github.com/koala73/worldmonitor` (the "World Monitor" real-time intelligence dashboard). All active proof-of-concept work ran against either (a) the real application, built from source and running on `localhost:3000` — a genuine controlled environment, not a mock — or (b) minimal, faithful reproduction harnesses for the two advisory classes that needed a dynamic demonstration the real instance's default config couldn't safely provide. **Nothing ever touched the live `worldmonitor.app` deployment or any real user data**, enforced in code (`engine/probe/safe-http.mjs` refuses any host that is not `localhost`/`127.0.0.1`/`::1` — see `docs/ROE.md`).
 
 **Posture verdict:** WorldMonitor is a hardened, actively-maintained codebase (87.5k★, 7,881+ commits, 30 custom CI security invariants). It has already published 11 security advisories through its own responsible-disclosure process, plus 1 draft advisory — a strong signal of a maintainer who finds and fixes real issues before a third party has to. This assessment's contribution is not "finding bugs a hardened app missed" but demonstrating a **reusable, advisory-aware methodology**: independently re-deriving the target's own CI guardrails from its live source, reproducing documented vulnerability classes in safe local harnesses to validate that methodology, and reporting the honest mix of what we found.
 
@@ -18,7 +18,7 @@ This is a time-boxed, authorized security assessment of `github.com/koala73/worl
 | REPRODUCED-KNOWN (validates a published advisory) | 2 |
 | CONFIRMED-NOVEL (new, confirmed) | 0 |
 | CANDIDATE-UNCONFIRMED (framework-surfaced, not independently confirmed) | 0 |
-| VERIFIED-SECURE (control tested, held) | 3 |
+| VERIFIED-SECURE (control tested, held) | 5 |
 
 **Top risks, in business terms:**
 
@@ -45,7 +45,8 @@ See [`docs/coverage-matrix.md`](../docs/coverage-matrix.md) for the full 7-scope
 ### [WM-002] Reserve-then-refund quota logic allows unlimited billable calls after a single reservation (Denial-of-Wallet)
 
 - **Status:** `REPRODUCED-KNOWN` — validates [`GHSA-hcq5-jm84-2395`](https://github.com/koala73/worldmonitor/security/advisories/GHSA-hcq5-jm84-2395)
-- **Severity:** High (7.2) — `CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:N/I:L/A:L`
+- **Severity (CVSS 3.1):** High (7.2) — `CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:N/I:L/A:L`
+- **Severity (CVSS 4.0):** `CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:H/SA:H`
 - **CWE:** CWE-770, CWE-362 · **WSTG:** WSTG-BUSL-02 · **OWASP:** API4:2023
 - **Component:** lab/repro-services/dow-mock (minimal reproduction of an MCP tool-call quota gate) · **Trust boundary:** 6
 - **Lab commit:** `a1caad92c7488ebb6a1ed6a3a9aed7591f89aab0`
@@ -61,7 +62,8 @@ See [`docs/coverage-matrix.md`](../docs/coverage-matrix.md) for the full 7-scope
 ### [WM-001] Public query pattern without ownership filter allows cross-tenant read (BOLA)
 
 - **Status:** `REPRODUCED-KNOWN` — validates [`GHSA-r649-4cqj-w93h`](https://github.com/koala73/worldmonitor/security/advisories/GHSA-r649-4cqj-w93h)
-- **Severity:** Medium (6.5) — `CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N`
+- **Severity (CVSS 3.1):** Medium (6.5) — `CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N`
+- **Severity (CVSS 4.0):** `CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N/AU:Y/V:C`
 - **CWE:** CWE-284, CWE-639 · **WSTG:** WSTG-ATHZ-02 · **OWASP:** API1:2023
 - **Component:** lab/repro-services/bola-mock (minimal reproduction of a Convex-style public query) · **Trust boundary:** 5
 - **Lab commit:** `a1caad92c7488ebb6a1ed6a3a9aed7591f89aab0`
@@ -99,6 +101,18 @@ A report that is all criticals on a hardened app is distrusted. These controls w
 - **Component:** Full real target source: src/, api/, server/, convex/ (1724 non-test .ts/.tsx files)
 - **Full write-up + evidence:** [`findings/WM-005/finding.md`](../findings/WM-005/finding.md)
 
+### [WM-006] Production security header posture (CSP/HSTS/XFO/etc.) evaluated dynamically + statically — hardened, one minor non-exploitable CSP gap
+
+- **Control tested:** Dynamic: real HTTP response headers captured from the actual running app via the sanctioned safe-http probe. Static: the real, live-cloned vercel.json's declared production header policy, parsed and evaluated with a real CSP-directive evaluator (not just presence/absence) covering unsafe-inline/unsafe-eval, object-src, base-uri, frame-ancestors, and nonce/hash/strict-dynamic usage.
+- **Component:** Real running instance (localhost:3000, dynamic pass) + real vercel.json (static, production-declared pass)
+- **Full write-up + evidence:** [`findings/WM-006/finding.md`](../findings/WM-006/finding.md)
+
+### [WM-007] Client-side storage content audited on the real running instance — SECURITY.md's 'no sensitive localStorage data' claim empirically confirmed
+
+- **Control tested:** Full content dump (not just key-name inspection) of all 27 real localStorage keys plus sessionStorage and cookies from the actual running app, each VALUE pattern-scanned for JWT shape, the target's own 'wm_<hex>' API-key format (seen in api/a2a.ts's own documentation), Bearer tokens, and generic secret/password/token assignment patterns.
+- **Component:** Real running instance (localhost:3000), browser localStorage/sessionStorage/cookies
+- **Full write-up + evidence:** [`findings/WM-007/finding.md`](../findings/WM-007/finding.md)
+
 
 ---
 
@@ -118,3 +132,8 @@ A report that is all criticals on a hardened app is distrusted. These controls w
 - **Landmine register (fabrication guardrail):** [`docs/LANDMINES.md`](../docs/LANDMINES.md).
 - **Framework tooling:** [`framework/seam-linter/`](../framework/seam-linter/) (invariant map, rate-limit re-derivation, CORS scan), [`framework/regression-harness/`](../framework/regression-harness/) (advisory-aware CI gate).
 - **Not independently re-derived (future work):** `scripts/enforce-premium-fetch.mjs`'s AST-based premium-fetch-wrapper check was read and catalogued (see `framework/seam-linter/output/invariant-coverage-map.md`) but not independently re-implemented in this session — it requires a full TypeScript AST parser, which was out of scope for the time available. Flagged honestly rather than approximated with a misleading regex.
+- **CVSS 4.0 engine:** [`engine/core/cvss40.mjs`](../engine/core/cvss40.mjs) — a faithful port of the official FIRST reference algorithm, cross-validated against the unmodified official implementation across 2000 randomly-generated vectors (0 mismatches) before use. See `tests/cvss40.test.mjs`.
+- **EPSS engine:** [`engine/core/epss.mjs`](../engine/core/epss.mjs) — live queries to the public FIRST EPSS API, cached, with an honest `not_applicable`/`unavailable` fallback rather than a fabricated number when a finding has no CVE or the API is unreachable.
+- **The safe HTTP probe:** [`engine/probe/safe-http.mjs`](../engine/probe/safe-http.mjs) — the sole sanctioned path for any dynamic request in this project; refuses any non-localhost host at the code level (`tests/safe_http.test.mjs`), rate-limits itself, and captures every request/response as evidence.
+- **Real controlled-environment testing:** findings WM-006 and WM-007 were produced against the actual WorldMonitor application, built from source and run locally on `localhost:3000` (see `lab/README.md`) — not a mock or a reproduction, the real app, satisfying the PS's "controlled environment" requirement directly.
+- **Local dev environment limitation, stated honestly:** the local instance runs with no Redis/Upstash backing store (the app's own default, zero-env-var mode). This means `RateLimit-*` response headers and live rate-limit-counting behavior cannot be dynamically observed against the local instance — some endpoints correctly return `503` (fail-closed on missing seed data) while others return `200` with an explicit `"source":"none"` marker (honest graceful degradation), but neither behavior lets us dynamically confirm request-counting throttle mechanics locally. WM-003's independent static re-derivation of the rate-limit coverage guardrail remains the authoritative check for policy *coverage*; dynamically confirming throttle *behavior* would need a Redis-backed local environment, which is future work, not a finding.

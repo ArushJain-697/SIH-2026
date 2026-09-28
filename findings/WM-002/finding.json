@@ -4,7 +4,6 @@
   "status": "REPRODUCED-KNOWN",
   "component": "lab/repro-services/dow-mock (minimal reproduction of an MCP tool-call quota gate)",
   "trust_boundary": 6,
-
   "severity": {
     "cvss31_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:N/I:L/A:L",
     "cvss31_score": 7.2,
@@ -12,26 +11,28 @@
     "epss": null
   },
   "epss_note": "No CVE assigned (reproduction of the already-published GHSA-hcq5-jm84-2395). Qualitatively highly automatable/repeatable: our own reproduction drove 10 identical attack calls in well under a second with a trivial script and no special tooling, which is exactly the kind of low-complexity, fully-automatable primitive EPSS weights toward higher real-world exploitation likelihood.",
-
   "tags": {
-    "cwe": ["CWE-770", "CWE-362"],
+    "cwe": [
+      "CWE-770",
+      "CWE-362"
+    ],
     "wstg": "WSTG-BUSL-02",
     "owasp_api": "API4:2023"
   },
-
   "lab_commit": "a1caad92c7488ebb6a1ed6a3a9aed7591f89aab0",
   "reproduce_script": "findings/WM-002/reproduce.sh",
   "control_tested": null,
-
-  "description": "A quota gate reserves one slot BEFORE dispatching a billable upstream call, then refunds that slot AFTER the call returns IF the response is classified as 'malformed' — i.e. the refund decision is made strictly after the metered call already executed and was billed. Any caller who can reliably trigger the 'malformed' classification gets their own quota counter back to zero net cost, while the upstream (owner-paid) side is billed on every single attempt. This is a faithful minimal reproduction of GHSA-hcq5-jm84-2395 ('MCP daily cost-cap bypass: quota slot refunded after the tool already executed'), driven against a real (local) mock-upstream over real HTTP so the billing event is independently observable and not merely asserted.",
+  "description": "A quota gate reserves one slot BEFORE dispatching a billable upstream call, then refunds that slot AFTER the call returns IF the response is classified as 'malformed' \u2014 i.e. the refund decision is made strictly after the metered call already executed and was billed. Any caller who can reliably trigger the 'malformed' classification gets their own quota counter back to zero net cost, while the upstream (owner-paid) side is billed on every single attempt. This is a faithful minimal reproduction of GHSA-hcq5-jm84-2395 ('MCP daily cost-cap bypass: quota slot refunded after the tool already executed'), driven against a real (local) mock-upstream over real HTTP so the billing event is independently observable and not merely asserted.",
   "preconditions": "None beyond network access to the (local) endpoint. dailyBudget=3 in the reproduction, chosen to make the divergence visible in a small number of calls.",
-  "business_impact": "This is the app's signature risk class: the server exists to proxy ~40+ paid third-party APIs, and the target's own .env.example defines explicit spend-budget knobs (e.g. AVIATIONSTACK_MONTHLY_BUDGET) precisely because the owner already fears exactly this. Our reproduction drove 10 attack calls against the vulnerable variant for a NET COST TO THE ATTACKER OF ZERO quota, while the (mock) upstream recorded 10 real billable calls — i.e. more than 3x the intended daily budget with no attacker-side signal that anything was wrong. Against a real metered vendor this is a direct, unbounded, and — critically — INVISIBLE-TO-THE-VICTIM'S-OWN-QUOTA-DASHBOARD financial drain.",
-  "remediation": "Make the reservation irrevocable the instant the billable call is dispatched — no code path after dispatch may increment the quota back up, regardless of the response content. A refund may only be issued for a pre-flight validation failure that happens BEFORE the upstream call is dispatched (i.e. before any money is spent). Demonstrated in lab/repro-services/dow-mock/patched.mjs, which caps billable upstream calls at exactly the daily budget regardless of attack volume against the identical attack.",
-
+  "business_impact": "This is the app's signature risk class: the server exists to proxy ~40+ paid third-party APIs, and the target's own .env.example defines explicit spend-budget knobs (e.g. AVIATIONSTACK_MONTHLY_BUDGET) precisely because the owner already fears exactly this. Our reproduction drove 10 attack calls against the vulnerable variant for a NET COST TO THE ATTACKER OF ZERO quota, while the (mock) upstream recorded 10 real billable calls \u2014 i.e. more than 3x the intended daily budget with no attacker-side signal that anything was wrong. Against a real metered vendor this is a direct, unbounded, and \u2014 critically \u2014 INVISIBLE-TO-THE-VICTIM'S-OWN-QUOTA-DASHBOARD financial drain.",
+  "remediation": "Make the reservation irrevocable the instant the billable call is dispatched \u2014 no code path after dispatch may increment the quota back up, regardless of the response content. A refund may only be issued for a pre-flight validation failure that happens BEFORE the upstream call is dispatched (i.e. before any money is spent). Demonstrated in lab/repro-services/dow-mock/patched.mjs, which caps billable upstream calls at exactly the daily budget regardless of attack volume against the identical attack.",
   "references": {
     "ghsa": "GHSA-hcq5-jm84-2395",
     "external": [
       "https://owasp.org/API-Security/editions/2023/en/0xa4-unrestricted-resource-consumption/"
     ]
-  }
+  },
+  "scope_areas": [
+    4
+  ]
 }

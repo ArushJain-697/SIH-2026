@@ -7,7 +7,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateFinding } from '../framework/schema/finding-rules.mjs';
+import { validateFinding, SCOPE_AREAS } from '../framework/schema/finding-rules.mjs';
 
 const REGISTER_IDS = new Set(['GHSA-r649-4cqj-w93h', 'GHSA-hcq5-jm84-2395']);
 
@@ -28,6 +28,7 @@ const validBase = {
   reproduce_script: 'findings/WM-001/reproduce.sh',
   description: 'x', business_impact: 'x', remediation: 'x',
   references: { ghsa: 'GHSA-r649-4cqj-w93h' },
+  scope_areas: [2],
 };
 
 test('valid REPRODUCED-KNOWN finding passes', () => {
@@ -77,6 +78,7 @@ test('VERIFIED-SECURE requires control_tested, not CVSS', () => {
     tags: { cwe: ['CWE-693'], wstg: 'WSTG-CONF-12' },
     description: 'x', business_impact: 'x', remediation: 'x',
     references: {},
+    scope_areas: [6],
   };
   const { valid, errors } = validateFinding(f, { registerIds: REGISTER_IDS });
   assert.equal(valid, true, errors.join('; '));
@@ -94,4 +96,37 @@ test('malformed CVSS 3.1 vector is rejected', () => {
   const { valid, errors } = validateFinding(f, { registerIds: REGISTER_IDS });
   assert.equal(valid, false);
   assert.ok(errors.some((e) => e.includes('cvss31_vector')));
+});
+
+test('missing scope_areas is rejected (build-map-advanced #B3 — proves PS coverage)', () => {
+  const { scope_areas, ...withoutScopeAreas } = validBase;
+  const { valid, errors } = validateFinding(withoutScopeAreas, { registerIds: REGISTER_IDS });
+  assert.equal(valid, false);
+  assert.ok(errors.some((e) => e.includes('scope_areas is required')));
+});
+
+test('empty scope_areas array is rejected', () => {
+  const f = { ...validBase, scope_areas: [] };
+  const { valid, errors } = validateFinding(f, { registerIds: REGISTER_IDS });
+  assert.equal(valid, false);
+  assert.ok(errors.some((e) => e.includes('scope_areas is required')));
+});
+
+test('scope_areas outside 1-7 is rejected', () => {
+  const f = { ...validBase, scope_areas: [0] };
+  assert.equal(validateFinding(f, { registerIds: REGISTER_IDS }).valid, false);
+  const f2 = { ...validBase, scope_areas: [8] };
+  assert.equal(validateFinding(f2, { registerIds: REGISTER_IDS }).valid, false);
+});
+
+test('a finding may declare more than one scope_area (e.g. WM-007 spans 5 and 7)', () => {
+  const f = { ...validBase, scope_areas: [5, 7] };
+  const { valid, errors } = validateFinding(f, { registerIds: REGISTER_IDS });
+  assert.equal(valid, true, errors.join('; '));
+});
+
+test('SCOPE_AREAS has exactly 7 labels at indices 1-7, matching the PS scope list', () => {
+  assert.equal(SCOPE_AREAS.length, 8); // index 0 unused + 7 real areas
+  assert.equal(SCOPE_AREAS[0], null);
+  for (let i = 1; i <= 7; i++) assert.ok(typeof SCOPE_AREAS[i] === 'string' && SCOPE_AREAS[i].length > 0);
 });
