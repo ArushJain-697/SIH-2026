@@ -10,7 +10,7 @@ The BuildMap remains the source of truth for phase objectives, ticket scope, dep
 
 # Current Status
 
-* **Current phase:** Phase 5 complete (report assembled); Phase 6 (deck/demo) and Phase 7 (freeze/submission) not started
+* **Current phase:** Phase 5 complete (report assembled); Phase 3 stretch tickets #15/#16 also completed in a follow-up pass; Phase 6 (deck/demo) and Phase 7 (freeze/submission) not started
 * **Phase status:** REVIEW
 * **Implementation started:** Yes — real, working, tested code (not scaffolding) across Phases 0–5
 * **Review status:** Pending user review
@@ -53,8 +53,8 @@ The BuildMap remains the source of truth for phase objectives, ticket scope, dep
 | #12 Lab snapshot + commit hash | 2 | DONE | `lab/README.md` pinned table + `lab/fetch-target-source.sh` (reproducible fetch) |
 | #13 Seam-Linter — invariant map | 3 | DONE | `framework/seam-linter/analyze-invariants.mjs` — ran for real against 30 real `enforce-*/check-*.mjs` files in the live-cloned source |
 | #14 Seam-Linter — sibling-path differential | 3 | **DONE, reframed** | Built as two real, independent guardrail re-derivations instead of a generic sibling-differ (a stronger, more defensible approach given the target's actual architecture — see "Design decisions" below): `rate-limit-coverage-check.mjs` (re-derives the target's own #4676 non-GET coverage guardrail from its real OpenAPI specs + registries) and `cors-scan.mjs` (audits all 24 real files referencing CORS headers). Both ran against the real source and produced real, evidence-backed `VERIFIED-SECURE` verdicts (WM-003, WM-004). |
-| #15 Chronological orphans | 3 | NOT STARTED | Stretch ticket; not attempted this session |
-| #16 Cast/assertion adjacency | 3 | NOT STARTED | Stretch ticket; not attempted this session |
+| #15 Chronological orphans | 3 | **DONE** | `framework/seam-linter/chronological-orphans.mjs` — since the local clone is shallow (no git history), used the GitHub API (Link-header last-page trick) to get REAL introduction dates. Result: all 13 files from WM-004 were created AFTER `api/_cors.js` already existed (spanning 6 months) — a genuine ongoing pattern, folded into WM-004 as an addendum rather than a separate finding since it doesn't change the verdict. |
+| #16 Cast/assertion adjacency | 3 | **DONE** | `framework/seam-linter/cast-adjacency.mjs` — complete sweep of all 262 real `as any`/`as unknown` occurrences (1724 files) for proximity to security-sensitive code. 2 candidates found and manually read; both confirmed benign. Produced its own finding, `findings/WM-005/` (`VERIFIED-SECURE`). First pass had 2 false positives from an incomplete `.spec.ts` test-file exclusion — caught, fixed, documented in the tool's own header, same discipline as WM-004. |
 | #17 Advisory-Aware Regression Harness | 3 | DONE | `framework/regression-harness/run.mjs` — encodes GHSA-r649 and GHSA-hcq5 as automated pass/fail checks against the lab harnesses; spawns and tears down its own child processes; one command, zero manual steps |
 | #18 Framework output → schema | 3 | DONE | All four findings + all Seam-Linter output validate against `framework/schema/finding-rules.mjs` |
 | #19 Reproduce a published advisory (BOLA) | 4 | DONE | `findings/WM-001/` — `REPRODUCED-KNOWN`, cites `GHSA-r649-4cqj-w93h`, CVSS 3.1 6.5 (computed, not asserted — see `framework/schema/cvss31.mjs`) |

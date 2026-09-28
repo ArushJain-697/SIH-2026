@@ -1,7 +1,7 @@
 # WorldMonitor Security Assessment — Report
 ### SIH 26163 · NTRO · "No Finding Without Proof"
 
-**Generated:** 2026-09-28T18:58:53.547Z (auto-assembled by `framework/generate-report.mjs` from `register/advisories.json` + `findings/*/finding.json` — do not hand-edit this file, edit the sources and regenerate)
+**Generated:** 2026-09-28T19:17:19.220Z (auto-assembled by `framework/generate-report.mjs` from `register/advisories.json` + `findings/*/finding.json` — do not hand-edit this file, edit the sources and regenerate)
 
 ---
 
@@ -18,7 +18,7 @@ This is a time-boxed, authorized security assessment of `github.com/koala73/worl
 | REPRODUCED-KNOWN (validates a published advisory) | 2 |
 | CONFIRMED-NOVEL (new, confirmed) | 0 |
 | CANDIDATE-UNCONFIRMED (framework-surfaced, not independently confirmed) | 0 |
-| VERIFIED-SECURE (control tested, held) | 2 |
+| VERIFIED-SECURE (control tested, held) | 3 |
 
 **Top risks, in business terms:**
 
@@ -92,6 +92,12 @@ A report that is all criticals on a hardened app is distrusted. These controls w
 - **Control tested:** Programmatic, complete (not hand-sampled) audit of every one of the 24 real files in the target's api/ and server/ directories that mention Access-Control-Allow-Origin, checking specifically for a literal wildcard ('*') or unvalidated-origin pattern co-occurring with Access-Control-Allow-Credentials:'true' or an actual read of an incoming Authorization/X-WorldMonitor-Key/X-Api-Key/X-Pro-Key header (not merely the word appearing in an Access-Control-Allow-Headers allow-list, which an initial broader heuristic pass falsely flagged in 5 files before being narrowed — see the false-positive note below).
 - **Component:** api/_cors.js shared helper vs. 24 real files that reference Access-Control-Allow-Origin (real target source)
 - **Full write-up + evidence:** [`findings/WM-004/finding.md`](../findings/WM-004/finding.md)
+
+### [WM-005] Type-safety-silencing casts (as any / as unknown) near security-sensitive code manually reviewed — none found unsafe
+
+- **Control tested:** Complete (not sampled) scan of every `as any` / `as unknown` occurrence in the real, live-cloned source for proximity (within 5 lines) to a curated list of security-sensitive markers (auth header reads, rate-limit calls, CORS headers, localStorage access, HTML sinks, premium-fetch/entitlement checks, JSON.parse of untrusted input). Every candidate surfaced was individually read in full context.
+- **Component:** Full real target source: src/, api/, server/, convex/ (1724 non-test .ts/.tsx files)
+- **Full write-up + evidence:** [`findings/WM-005/finding.md`](../findings/WM-005/finding.md)
 
 
 ---

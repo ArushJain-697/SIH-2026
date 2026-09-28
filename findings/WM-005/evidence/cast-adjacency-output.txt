@@ -1,0 +1,10 @@
+{
+  "files_scanned": 1724,
+  "total_casts": 262,
+  "findings_near_sensitive_code": 2,
+  "verdict": "CANDIDATE-UNCONFIRMED"
+}
+
+2 of 262 total "as any"/"as unknown" occurrences fall within 5 lines of a security-sensitive marker — each needs a manual read to determine if the cast is benign (e.g. a known-safe library type gap) or actually silences a meaningful check.
+  [any] convex/apiPlanLimitUsage.ts:522 (near: premium-fetch) — (internal as any).apiPlanLimitUsage.listActivePaidEntitlements,
+  [unknown] src/app/event-handlers.ts:1164 (near: local-storage) — const parsed = JSON.parse(raw) as unknown;

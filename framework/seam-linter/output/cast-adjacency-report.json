@@ -1,0 +1,31 @@
+{
+  "tool": "cast-adjacency",
+  "target_commit": "a1caad92c7488ebb6a1ed6a3a9aed7591f89aab0",
+  "checked_at": "2026-09-28T19:15:38.404Z",
+  "scope_note": "Checks \"as any\" / \"as unknown\" only. Non-null assertion (!) excluded — needs a real TS AST parser to avoid false positives from !=, !==, and logical negation; see this file's header comment.",
+  "files_scanned": 1724,
+  "total_as_any_or_unknown_occurrences": 262,
+  "window_lines": 5,
+  "findings_near_sensitive_code": [
+    {
+      "file": "convex/apiPlanLimitUsage.ts",
+      "line": 522,
+      "cast_kind": "any",
+      "snippet": "(internal as any).apiPlanLimitUsage.listActivePaidEntitlements,",
+      "nearby_sensitive_patterns": [
+        "premium-fetch"
+      ]
+    },
+    {
+      "file": "src/app/event-handlers.ts",
+      "line": 1164,
+      "cast_kind": "unknown",
+      "snippet": "const parsed = JSON.parse(raw) as unknown;",
+      "nearby_sensitive_patterns": [
+        "local-storage"
+      ]
+    }
+  ],
+  "verdict": "CANDIDATE-UNCONFIRMED",
+  "verdict_note": "2 of 262 total \"as any\"/\"as unknown\" occurrences fall within 5 lines of a security-sensitive marker — each needs a manual read to determine if the cast is benign (e.g. a known-safe library type gap) or actually silences a meaningful check."
+}

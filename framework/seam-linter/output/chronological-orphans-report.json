@@ -1,0 +1,103 @@
+{
+  "tool": "chronological-orphans",
+  "checked_at": "2026-09-28T19:13:06.069Z",
+  "earliest_shared_cors_control_date": "2026-02-11T10:35:07Z",
+  "control_files": [
+    {
+      "path": "api/_cors.js",
+      "sha": "f7119b9ed6ecebb7b49efc6498c6f7db9376d187",
+      "date": "2026-02-11T10:35:07Z",
+      "message": "Harden CORS, XSS, and input validation across all API endpoints and components"
+    },
+    {
+      "path": "server/cors.ts",
+      "sha": "c939cc62964991698c63391893e93feb70121223",
+      "date": "2026-02-20T23:39:56Z",
+      "message": "Proto-first API rebuild: sebuf contracts, handlers, gateway, and generated docs (#106)"
+    }
+  ],
+  "candidate_files_postdating_control": [
+    {
+      "path": "api/_agent-metadata.ts",
+      "sha": "d41f4b9f8f432fc7d7ef231db55e13ecb5c97439",
+      "date": "2026-07-04T05:59:27Z",
+      "message": "feat(agent-auth): auth.md + agent_auth discovery metadata (orank Access) (#4717)"
+    },
+    {
+      "path": "api/a2a.ts",
+      "sha": "924212257e4008d8b62193ec48efa1481e73cc88",
+      "date": "2026-07-05T10:53:03Z",
+      "message": "feat(agent-readiness): A2A agent card + anonymous concierge endpoint at /a2a (#4824)"
+    },
+    {
+      "path": "api/agent-auth.ts",
+      "sha": "d3d88e27de80369932d8041c6bb73194aa7fa8dd",
+      "date": "2026-07-07T09:29:00Z",
+      "message": "feat(agents): Web Bot Auth key directory + /agent/auth WWW-Authenticate challenge (orank) (#5009)"
+    },
+    {
+      "path": "api/ask.ts",
+      "sha": "878e03e2e083965053aca6bef3649280ad860f1f",
+      "date": "2026-07-05T11:07:27Z",
+      "message": "feat(agent-readiness): NLWeb POST /ask (+SSE) and /?mode=agent machine-readable view (#4838)"
+    },
+    {
+      "path": "api/docs-mcp.ts",
+      "sha": "52e5d867020fabe2610819caa3f4c3ce4295979e",
+      "date": "2026-07-23T07:26:03Z",
+      "message": "feat(agent-readiness): sandbox, docs-MCP JSON-RPC errors, schemamap, modular llms.txt (orank round) (#5469)"
+    },
+    {
+      "path": "api/geo.js",
+      "sha": "5467783bbfaca73f1b43091f921475b7c87ee66b",
+      "date": "2026-03-02T12:16:01Z",
+      "message": "feat(live): add geo-restricted channel support and restore WELT (#765)"
+    },
+    {
+      "path": "api/http-message-signatures-directory.ts",
+      "sha": "d3d88e27de80369932d8041c6bb73194aa7fa8dd",
+      "date": "2026-07-07T09:29:00Z",
+      "message": "feat(agents): Web Bot Auth key directory + /agent/auth WWW-Authenticate challenge (orank) (#5009)"
+    },
+    {
+      "path": "api/md-twin.ts",
+      "sha": "a2b80723a6eeedc628ad9ca4a79e28a8a6e35af7",
+      "date": "2026-08-19T10:54:53Z",
+      "message": "fix(agents): serve site-wide .md twins, not one sampled URL (#6953)"
+    },
+    {
+      "path": "api/oauth/authorize.js",
+      "sha": "51f7b7cf6d2dde06565fae75999c45acb82da2a7",
+      "date": "2026-03-28T14:40:53Z",
+      "message": "feat(mcp): full OAuth 2.1 compliance — Authorization Code + PKCE + DCR (#2432)"
+    },
+    {
+      "path": "api/oauth-authorization-server.ts",
+      "sha": "d41f4b9f8f432fc7d7ef231db55e13ecb5c97439",
+      "date": "2026-07-04T05:59:27Z",
+      "message": "feat(agent-auth): auth.md + agent_auth discovery metadata (orank Access) (#4717)"
+    },
+    {
+      "path": "api/oauth-protected-resource.ts",
+      "sha": "d75bde4e035f16aae507cf45ceaf448179768012",
+      "date": "2026-04-23T17:17:32Z",
+      "message": "fix(agent-readiness): host-aware oauth-protected-resource endpoint (#3351)"
+    },
+    {
+      "path": "api/security/report.js",
+      "sha": "26892af2ab4a7674801343434d91958f2f3bb0e8",
+      "date": "2026-05-26T08:43:30Z",
+      "message": "fix(security): integrate pending hardening PRs (#3912)"
+    },
+    {
+      "path": "api/version.js",
+      "sha": "cccfdac0f9c0a1b23de0b9f4b00bd75a9b04815b",
+      "date": "2026-02-16T19:13:10Z",
+      "message": "feat(update): add desktop update check with architecture-aware download links"
+    }
+  ],
+  "candidate_files_predating_control": [],
+  "errors": [],
+  "verdict": "CANDIDATE-UNCONFIRMED",
+  "verdict_note": "13 of 13 candidate file(s) were created AFTER the shared CORS control already existed (2026-02-11T10:35:07Z) — new code kept bypassing an already-existing control. Needs manual read of each to determine if this is intentional (per-file justification) or a genuine chronological blind spot."
+}

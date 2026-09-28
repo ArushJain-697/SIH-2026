@@ -36,3 +36,15 @@ bash findings/WM-004/reproduce.sh
 ## Verdict
 
 **Control holds.** All 13 independent wildcard usages are safe by construction (no credentials, or explicitly documented as anonymous-only). Recommended (non-urgent) maintainability improvement: consolidate the 13 duplications to call `getPublicCorsHeaders()` explicitly, reducing future drift risk — not because any current instance is exploitable.
+
+## Addendum — temporal extension (build-map ticket #15)
+
+Because none of the current instances are exploitable, a natural follow-up question is whether this is old, settled debt or an ongoing pattern. [`framework/seam-linter/chronological-orphans.mjs`](../../framework/seam-linter/chronological-orphans.mjs) answers it using real GitHub API data (our clone is shallow, so this needed the API, not local `git blame`):
+
+**All 13 files were created AFTER `api/_cors.js` (introduced 2026-02-11) already existed** — spanning 2026-02-16 through 2026-08-19, over six months. This is not historical debt from before the shared helper existed; it is a live pattern of new agent-facing endpoints (`a2a.ts`, `ask.ts`, `agent-auth.ts`, `docs-mcp.ts`, `md-twin.ts`, and others — mostly part of an "agent-readiness" feature push per their commit messages) each independently reinventing the same three-line wildcard CORS object rather than calling the shared helper that already existed when they were written.
+
+**Further real observation: none of the target's 30 `enforce-*.mjs`/`check-*.mjs` CI invariants watch CORS configuration at all** (confirmed against the full list in `framework/seam-linter/output/invariant-coverage-map.md`). So this pattern has no automated guardrail — it is currently safe only because every author so far happened to keep the wildcard credential-free, not because anything would catch a future author who didn't.
+
+**This does not change the finding's status.** It remains `VERIFIED-SECURE` — the control (no wildcard+credentials combination) holds today, confirmed programmatically across all 13 files. This addendum is reported because it is real, additional, and relevant evidence for the project's central thesis: CI invariants cover what someone thought to write a check for, and the gap at the edge of that coverage is exactly where repeated, unguarded, human-written duplication accumulates over time. It is also a concrete, low-cost remediation recommendation: a 31st invariant (`enforce-cors-policy.mjs`) requiring every CORS-header-setting file to either import the shared helper or be listed in an explicit, reviewed exemption registry — the exact pattern the target already uses successfully for rate-limiting (see WM-003) — would close this gap for good, not just for the 13 files found today.
+
+Full evidence: [`framework/seam-linter/output/chronological-orphans-report.json`](../../framework/seam-linter/output/chronological-orphans-report.json).
