@@ -1,7 +1,7 @@
 # WorldMonitor Security Assessment — Report
 ### SIH 26163 · NTRO · "No Finding Without Proof"
 
-**Generated:** 2026-09-29T05:38:25.751Z (auto-assembled by `framework/generate-report.mjs` from `register/advisories.json` + `findings/*/finding.json` — do not hand-edit this file, edit the sources and regenerate)
+**Generated:** 2026-09-29T06:32:40.991Z (auto-assembled by `framework/generate-report.mjs` from `register/advisories.json` + `findings/*/finding.json` — do not hand-edit this file, edit the sources and regenerate)
 
 ---
 

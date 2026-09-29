@@ -26,11 +26,13 @@
     "lint-safety": "node tests/lint_no_raw_fetch.mjs",
     "proof-spine": "node framework/generate-proof-spine.mjs",
     "report": "node framework/generate-report.mjs",
+    "ps-export": "node engine/report/ps-export.mjs",
+    "coverage-matrix:check": "node framework/generate-coverage-matrix.mjs",
     "report-app:data": "node engine/report/build-report-data.mjs",
     "report-app:dev": "npm run report-app:data && npm --prefix report-app run dev -- --open",
     "report-app:build": "npm run report-app:data && npm --prefix report-app run build",
     "start": "npm run report-app:dev",
-    "assess": "npm run scan:all-static && npm run report-app:build"
+    "assess": "npm run scan:all-static && npm run proof-spine && npm run report && npm run ps-export && npm run coverage-matrix:check && npm run report-app:build"
   },
   "engines": {
     "node": ">=18"

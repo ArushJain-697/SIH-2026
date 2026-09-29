@@ -1,5 +1,38 @@
 import React from 'react';
 
+function MappingTable({ findings }) {
+  return (
+    <div className="table-wrap">
+      <table className="reg-table">
+        <thead>
+          <tr>
+            <th>Finding</th>
+            <th>CWE</th>
+            <th>WSTG</th>
+            <th>OWASP API</th>
+            <th>CVSS 3.1</th>
+            <th>CVSS 4.0</th>
+            <th>EPSS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {findings.map((f) => (
+            <tr key={f.id}>
+              <td><span className="mono">{f.id}</span></td>
+              <td className="mono">{(f.tags?.cwe || []).join(', ') || '—'}</td>
+              <td className="mono">{f.tags?.wstg || '—'}</td>
+              <td className="mono">{f.tags?.owasp_api || '—'}</td>
+              <td className="mono">{f.severity?.cvss31_score ?? '—'}</td>
+              <td className="mono" style={{ fontSize: 10 }}>{f.severity?.cvss40_vector ? '✓ vector' : '—'}</td>
+              <td className="mono">{typeof f.severity?.epss === 'number' ? f.severity.epss : (f.epss_note ? 'n/a — noted' : '—')}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function Methodology({ data }) {
   return (
     <div>
@@ -32,6 +65,18 @@ export default function Methodology({ data }) {
           <div><div className="kv-label">Disclosure posture</div><div className="kv-value" style={{ fontSize: 12.5 }}>ISO/IEC 29147 &amp; 30111-aligned</div></div>
           <div><div className="kv-label">SBOM format</div><div className="kv-value" style={{ fontSize: 12.5 }}>CycloneDX 1.5</div></div>
         </div>
+      </div>
+
+      <div className="section">
+        <div className="section-title">Per-finding standards mapping — generated, not hand-typed</div>
+        <MappingTable findings={data.findings} />
+        <p style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 8 }}>
+          ASVS is deliberately not mapped per finding here — assigning specific ASVS control IDs without a
+          dedicated per-control review would risk a precision this assessment's time budget couldn't verify.
+          General ASVS-aligned areas covered: V2 (authentication), V4 (access control), V5 (validation),
+          V7 (error handling/logging), V9 (communications), V13 (API/web service) — see individual findings
+          for the exact mechanism tested.
+        </p>
       </div>
 
       <div className="section">

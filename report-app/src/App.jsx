@@ -5,11 +5,13 @@ import FindingsList from './components/FindingsList.jsx';
 import FindingDetail from './components/FindingDetail.jsx';
 import ProofSpine from './components/ProofSpine.jsx';
 import Methodology from './components/Methodology.jsx';
+import PSExport from './components/PSExport.jsx';
 
 const NAV = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'findings', label: 'Findings' },
   { key: 'proof-spine', label: 'Proof Spine' },
+  { key: 'ps-export', label: 'PS Export' },
   { key: 'methodology', label: 'Methodology' },
 ];
 
@@ -40,6 +42,8 @@ export default function App() {
       : <FindingsList data={data} onSelect={setSelectedFinding} />;
   } else if (tab === 'proof-spine') {
     content = <ProofSpine data={data} />;
+  } else if (tab === 'ps-export') {
+    content = <PSExport data={data} />;
   } else if (tab === 'methodology') {
     content = <Methodology data={data} />;
   }

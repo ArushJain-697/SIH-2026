@@ -83,11 +83,27 @@ jobs:
       - name: Validate every finding against the schema
         run: npm run validate-findings
 
+      - name: Regenerate PS-schema deliverable export (#F3)
+        run: npm run ps-export
+
+      - name: Check coverage-matrix consistency (#G3)
+        run: npm run coverage-matrix:check
+
       - name: Install report-app dependencies
         run: npm --prefix report-app ci
 
       - name: Build the report app (regenerates assessment-data.json + static bundle)
         run: npm run report-app:build
+
+      - name: Upload generated deliverable docs (SBOM, PS-schema export, CERT-In report, proof spine)
+        uses: actions/upload-artifact@v4
+        with:
+          name: assessment-deliverables
+          path: |
+            report/report.md
+            report/ps-schema-export.md
+            docs/proof-spine.md
+            engine/scanners/output/*.json
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

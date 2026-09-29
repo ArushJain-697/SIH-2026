@@ -25,6 +25,8 @@ const STEPS = [
   { name: 'Phase C scanners (structural)', cmd: 'node', args: ['--test', 'tests/phase_c_scanners.test.mjs'] },
   { name: 'landmine scan', cmd: 'node', args: ['tests/scan_landmines.mjs'] },
   { name: 'finding schema validation', cmd: 'node', args: ['tests/validate_findings.mjs'] },
+  { name: 'PS-schema export field order (#F3)', cmd: 'node', args: ['--test', 'tests/ps_export.test.mjs'] },
+  { name: 'coverage matrix consistency (#G3)', cmd: 'node', args: ['--test', 'tests/coverage_matrix.test.mjs'] },
   { name: 'advisory-aware regression harness', cmd: 'node', args: ['framework/regression-harness/run.mjs'] },
 ];
 

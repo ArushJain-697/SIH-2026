@@ -18,6 +18,7 @@
 import { readFileSync, readdirSync, existsSync, statSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { SCOPE_AREAS } from '../../framework/schema/finding-rules.mjs';
+import { buildCoverageMatrix } from '../../framework/generate-coverage-matrix.mjs';
 
 const ROOT = new URL('../../', import.meta.url).pathname;
 const FINDINGS_DIR = join(ROOT, 'findings');
@@ -62,25 +63,6 @@ function loadFindings() {
     })
     .filter(Boolean)
     .sort((a, b) => a.id.localeCompare(b.id));
-}
-
-function buildCoverageMatrix(findings) {
-  const matrix = {};
-  for (let area = 1; area <= 7; area++) {
-    const findingsForArea = findings.filter((f) => (f.scope_areas || []).includes(area));
-    const statuses = new Set(findingsForArea.map((f) => f.status));
-    let verdict = 'NOT_TESTED';
-    if (statuses.has('REPRODUCED-KNOWN') || statuses.has('CONFIRMED-NOVEL')) verdict = 'FINDING';
-    else if (statuses.has('CANDIDATE-UNCONFIRMED')) verdict = 'CANDIDATE';
-    else if (statuses.has('VERIFIED-SECURE')) verdict = 'VERIFIED_SECURE';
-    matrix[area] = {
-      area_number: area,
-      label: SCOPE_AREAS[area],
-      verdict,
-      finding_ids: findingsForArea.map((f) => f.id),
-    };
-  }
-  return matrix;
 }
 
 function loadRegister() {
