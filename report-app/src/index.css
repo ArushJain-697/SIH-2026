@@ -214,6 +214,8 @@ code { font-size: 0.86em; background: var(--color-neutral-100); padding: 0.08em 
 .section-head { max-width: 720px; margin-bottom: 2.25rem; }
 .section-head h2 { font-size: clamp(1.9rem, 3.4vw, 2.7rem); line-height: 1.12; }
 .section-head p { margin-top: 0.85rem; color: var(--color-neutral-600); font-size: 1.02rem; }
+.section-head.center { max-width: 760px; margin-left: auto; margin-right: auto; text-align: center; }
+.section-head.big h2 { font-size: clamp(2.3rem, 4.4vw, 3.6rem); }
 
 .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
@@ -291,7 +293,8 @@ body::after {
 /* ---------- Scroll-pinned sections ---------- */
 
 .pin { position: relative; height: var(--pin-h, 300vh); }
-.pin-inner { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; justify-content: center; padding-top: 84px; padding-bottom: 96px; }
+.pin-inner { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; justify-content: center; padding-top: 92px; padding-bottom: 92px; }
+.pin-inner > .section-head { margin-bottom: 1.75rem; flex-shrink: 0; }
 
 /* Pipeline: stepper rail + one detail panel */
 .pp { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 3rem; align-items: center; }
@@ -674,3 +677,4 @@ body::after {
   .safety, .cta, .spotlight-copy, .spotlight-viz, .bench.feature { padding: 1.5rem; }
   .container, .console { padding-left: 1rem; padding-right: 1rem; }
 }
+

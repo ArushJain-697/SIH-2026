@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useMotionValueEvent, useScroll, useTransform }
 export type Stage = { icon: ReactNode; title: string; body: string; stat: string; file: string };
 
 // Scroll-pinned stepper: the section sticks while scroll progress fills the rail and swaps the detail panel.
-export function PinnedPipeline({ stages }: { stages: Stage[] }) {
+export function PinnedPipeline({ stages, head }: { stages: Stage[]; head?: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
@@ -26,6 +26,7 @@ export function PinnedPipeline({ stages }: { stages: Stage[] }) {
   return (
     <div ref={ref} className="pin" style={{ ['--pin-h' as string]: `${stages.length * 50 + 50}vh` }}>
       <div className="pin-inner">
+        {head}
         <div className="pp">
           <ol className="pp-list">
             <span className="pp-track" aria-hidden><motion.span className="pp-fill" style={{ height: fill }} /></span>

@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { motion, useMotionValueEvent, useScroll, useTransform } from 'motion/react';
 import { data } from '../data';
 import { VerdictBadge } from './ui';
 import { verdictMeta } from '../lib/status';
 
 // Scroll-pinned horizontal pan: vertical scroll progress drives the track sideways.
-export function ScopePan({ go }: { go: (p: string) => void }) {
+export function ScopePan({ go, head }: { go: (p: string) => void; head?: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const [idx, setIdx] = useState(0);
@@ -27,6 +27,7 @@ export function ScopePan({ go }: { go: (p: string) => void }) {
   return (
     <div ref={ref} className="pin pan" style={{ ['--pin-h' as string]: `${cells.length * 40 + 60}vh` }}>
       <div className="pin-inner pan-inner">
+        {head}
         <div className="pan-viewport">
           <motion.div ref={track} className="pan-track" style={{ x }}>
             <aside className="pan-key">
