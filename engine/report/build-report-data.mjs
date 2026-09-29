@@ -70,6 +70,13 @@ function loadRegister() {
   return existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : { advisories: [] };
 }
 
+function loadInventoryStats() {
+  const p = join(ROOT, 'engine/inventory/endpoints.json');
+  if (!existsSync(p)) return null;
+  const { stats } = JSON.parse(readFileSync(p, 'utf8'));
+  return stats || null;
+}
+
 function loadProofSpine() {
   const p = join(ROOT, 'docs/proof-spine.md');
   return existsSync(p) ? readFileSync(p, 'utf8') : null;
@@ -107,6 +114,7 @@ async function main() {
     },
     proof_spine_markdown: proofSpineMarkdown,
     regression_results: regressionResults,
+    inventory: loadInventoryStats(),
   };
 
   mkdirSync(join(ROOT, 'report-app/src/data'), { recursive: true });
