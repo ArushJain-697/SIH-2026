@@ -30,7 +30,9 @@ export default function App() {
     window.location.hash = p;
   };
 
-  if (!path.startsWith('/console')) return <Landing go={go} />;
+  const skip = <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById('main')?.focus(); }}>Skip to content</a>;
+
+  if (!path.startsWith('/console')) return <>{skip}<Landing go={go} /></>;
 
   const findingMatch = path.match(/^\/console\/findings\/(WM-\d{3})$/);
   let page;
@@ -41,5 +43,5 @@ export default function App() {
   else if (path.startsWith('/console/methodology')) page = <Methodology />;
   else page = <Dashboard go={go} />;
 
-  return <Shell path={path} go={go}>{page}</Shell>;
+  return <>{skip}<Shell path={path} go={go}>{page}</Shell></>;
 }

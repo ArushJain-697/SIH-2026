@@ -28,7 +28,7 @@ export function Shell({ path, go, children }: { path: string; go: (p: string) =>
           </a>
         }
       />
-      <main className="console" key={path}>
+      <main className="console" key={path} id="main" tabIndex={-1} style={{ outline: 'none' }}>
         <div className="enter">{children}</div>
       </main>
     </>

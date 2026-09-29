@@ -22,9 +22,9 @@ const ENGINE = [
 ];
 
 const NOT_DONE = [
-  'No request to the live worldmonitor.app deployment — localhost only, enforced in code.',
+  'No request to the live worldmonitor.app deployment. Localhost only, enforced in code.',
   'No account created on the target or on any identity provider.',
-  'No weaponized payloads, even in the lab — benign markers only.',
+  'No weaponized payloads, even in the lab. Benign markers only.',
   'No published advisory claimed as novel; the schema validator fails the build if one is.',
   'Dynamic confirmation of new candidates (ticket #E2) deliberately skipped: no new exploitable finding existed to demonstrate.',
   'Agent-skill prompt-injection surface (public/.well-known/agent-skills) not tested in this pass.',
@@ -59,12 +59,12 @@ export function Methodology() {
                 {data.findings.map((f) => (
                   <tr key={f.id}>
                     <td className="mono" style={{ fontWeight: 700 }}>{f.id}</td>
-                    <td className="mono" style={{ fontSize: '0.78rem' }}>{f.tags?.cwe?.join(', ') ?? '—'}</td>
-                    <td className="mono" style={{ fontSize: '0.78rem' }}>{f.tags?.wstg ?? '—'}</td>
-                    <td className="mono" style={{ fontSize: '0.78rem' }}>{f.tags?.owasp_api ?? '—'}</td>
-                    <td className="mono">{f.severity?.cvss31_score ?? '—'}</td>
-                    <td>{f.severity?.cvss40_vector ? <Check size={15} color="var(--color-accent-600)" /> : '—'}</td>
-                    <td className="mono" style={{ fontSize: '0.78rem' }}>{typeof f.severity?.epss === 'number' ? f.severity.epss : f.epss_note ? 'N/A, noted' : '—'}</td>
+                    <td className="mono" style={{ fontSize: '0.78rem' }}>{f.tags?.cwe?.join(', ') ?? 'n/a'}</td>
+                    <td className="mono" style={{ fontSize: '0.78rem' }}>{f.tags?.wstg ?? 'n/a'}</td>
+                    <td className="mono" style={{ fontSize: '0.78rem' }}>{f.tags?.owasp_api ?? 'n/a'}</td>
+                    <td className="mono">{f.severity?.cvss31_score ?? 'n/a'}</td>
+                    <td>{f.severity?.cvss40_vector ? <Check size={15} color="var(--color-accent-600)" /> : 'n/a'}</td>
+                    <td className="mono" style={{ fontSize: '0.78rem' }}>{typeof f.severity?.epss === 'number' ? f.severity.epss : f.epss_note ? 'N/A, noted' : 'n/a'}</td>
                   </tr>
                 ))}
               </tbody>

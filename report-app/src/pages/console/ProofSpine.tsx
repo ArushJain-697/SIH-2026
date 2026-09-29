@@ -11,7 +11,7 @@ export function ProofSpine({ go }: { go: (p: string) => void }) {
       <div className="page-head">
         <div>
           <h1>Proof spine</h1>
-          <p>Every advisory already published on the target, verified {register.verified_on}. Prior art is reproduced and labelled as such — never claimed as a new discovery.</p>
+          <p>Every advisory already published on the target, verified {register.verified_on}. Prior art is reproduced and labelled as such, never claimed as a new discovery.</p>
         </div>
       </div>
 
@@ -59,7 +59,7 @@ export function ProofSpine({ go }: { go: (p: string) => void }) {
           <h3 style={{ fontSize: '1.05rem', marginBottom: '0.6rem' }}>External researcher credits</h3>
           {register.external_researcher_credits.map((c) => (
             <p key={c.researcher} style={{ fontSize: '0.88rem', color: 'var(--color-neutral-700)' }}>
-              <b>{c.researcher}</b> ({c.year}) — {c.findings.join('; ')}
+              <b>{c.researcher}</b> ({c.year}): {c.findings.join('; ')}
             </p>
           ))}
         </div>

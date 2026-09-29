@@ -15,7 +15,7 @@ export function Dashboard({ go }: { go: (p: string) => void }) {
   const scored = data.findings.filter((f) => f.status !== 'VERIFIED-SECURE' && f.severity?.cvss31_score != null);
   const bands = [
     { label: 'High (7.0+)', n: scored.filter((f) => (f.severity!.cvss31_score ?? 0) >= 7).length, c: 'var(--color-primary-500)' },
-    { label: 'Medium (4.0–6.9)', n: scored.filter((f) => { const s = f.severity!.cvss31_score ?? 0; return s >= 4 && s < 7; }).length, c: 'var(--color-secondary-500)' },
+    { label: 'Medium (4.0 to 6.9)', n: scored.filter((f) => { const s = f.severity!.cvss31_score ?? 0; return s >= 4 && s < 7; }).length, c: 'var(--color-secondary-500)' },
     { label: 'Low (<4.0)', n: scored.filter((f) => (f.severity!.cvss31_score ?? 0) < 4).length, c: 'var(--color-accent-500)' },
   ];
   const patched = data.findings.find((f) => f.remediation_patch_diff);
@@ -89,7 +89,7 @@ export function Dashboard({ go }: { go: (p: string) => void }) {
 
           <div className="card pad">
             <h3 style={{ fontSize: '1.05rem' }}>Severity of scored findings</h3>
-            <div className="sub" style={{ fontSize: '0.76rem', color: 'var(--color-neutral-500)', marginBottom: '0.9rem' }}>CVSS 3.1, computed — verified-secure verdicts carry no score</div>
+            <div className="sub" style={{ fontSize: '0.76rem', color: 'var(--color-neutral-500)', marginBottom: '0.9rem' }}>CVSS 3.1, computed. Verified-secure verdicts carry no score.</div>
             <div className="sev-track">
               {bands.filter((b) => b.n > 0).map((b) => <div key={b.label} style={{ flex: b.n, background: b.c }} />)}
             </div>
@@ -115,7 +115,7 @@ export function Dashboard({ go }: { go: (p: string) => void }) {
                       <div className="t-title">{f.title}</div>
                       <div className="t-meta">{f.id} · {f.references?.ghsa ?? f.tags?.owasp_api}</div>
                     </td>
-                    <td style={{ width: 90 }}><b className="mono">{f.severity?.cvss31_score ?? '—'}</b></td>
+                    <td style={{ width: 90 }}><b className="mono">{f.severity?.cvss31_score ?? 'n/a'}</b></td>
                     <td style={{ width: 130 }}><StatusBadge status={f.status} /></td>
                   </tr>
                 ))}

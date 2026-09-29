@@ -53,7 +53,7 @@ export function TerminalReplay() {
     <div className="surface-dark terminal">
       <div className="terminal-bar">
         <div className="traffic"><span /><span /><span /></div>
-        <div className="terminal-title">seam — regression harness</div>
+        <div className="terminal-title">seam: regression harness</div>
         <span className="badge dark">REPLAY</span>
       </div>
       <div className="terminal-body" aria-live="polite">

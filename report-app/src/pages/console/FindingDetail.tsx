@@ -6,7 +6,7 @@ import { StatusBadge } from '../../components/ui';
 
 export function FindingDetail({ id, go }: { id: string; go: (p: string) => void }) {
   const f = findingById(id);
-  // finding.md is first-party, generated in this repo — not user-supplied content.
+  // finding.md is first-party, generated in this repo, not user-supplied content.
   const html = useMemo(() => (f?.markdown ? (marked.parse(f.markdown, { async: false }) as string) : null), [f]);
   const [copied, setCopied] = useState(false);
 
@@ -31,7 +31,7 @@ export function FindingDetail({ id, go }: { id: string; go: (p: string) => void 
   const kv: { k: string; v: string | undefined; wide?: boolean }[] = [
     { k: f.severity?.cvss31_score != null ? `CVSS 3.1 · ${f.severity.cvss31_score}` : 'CVSS 3.1', v: f.severity?.cvss31_vector, wide: true },
     { k: 'CVSS 4.0', v: f.severity?.cvss40_vector, wide: true },
-    { k: 'EPSS', v: typeof f.severity?.epss === 'number' ? String(f.severity.epss) : f.epss_note ? 'N/A — no CVE (see write-up)' : undefined },
+    { k: 'EPSS', v: typeof f.severity?.epss === 'number' ? String(f.severity.epss) : f.epss_note ? 'N/A: no CVE (see write-up)' : undefined },
     { k: 'CWE', v: f.tags?.cwe?.join(', ') },
     { k: 'WSTG', v: f.tags?.wstg },
     { k: 'OWASP API', v: f.tags?.owasp_api },

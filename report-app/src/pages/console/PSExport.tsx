@@ -4,12 +4,12 @@ import { StatusBadge } from '../../components/ui';
 import type { Finding } from '../../types';
 
 function severity(f: Finding): ReactNode {
-  if (!f.severity?.cvss31_vector) return `N/A — ${f.status} (a held control has nothing to score)`;
+  if (!f.severity?.cvss31_vector) return `N/A: ${f.status} (a held control has nothing to score)`;
   return (
     <>
-      <div className="mono">CVSS 3.1 · {f.severity.cvss31_score} — {f.severity.cvss31_vector}</div>
-      {f.severity.cvss40_vector && <div className="mono">CVSS 4.0 — {f.severity.cvss40_vector}</div>}
-      <div className="mono">EPSS — {typeof f.severity.epss === 'number' ? f.severity.epss : 'N/A (no CVE assigned)'}</div>
+      <div className="mono">CVSS 3.1 ({f.severity.cvss31_score}): {f.severity.cvss31_vector}</div>
+      {f.severity.cvss40_vector && <div className="mono">CVSS 4.0: {f.severity.cvss40_vector}</div>}
+      <div className="mono">EPSS: {typeof f.severity.epss === 'number' ? f.severity.epss : 'N/A (no CVE assigned)'}</div>
     </>
   );
 }
@@ -18,7 +18,7 @@ function steps(f: Finding): ReactNode {
   return (
     <>
       {f.preconditions && <div style={{ marginBottom: '0.35rem' }}>Preconditions: {f.preconditions}</div>}
-      <div className="mono">{f.reproduce_script ? `bash ${f.reproduce_script}` : 'Static-analysis verdict — see proof of concept for the source evidence.'}</div>
+      <div className="mono">{f.reproduce_script ? `bash ${f.reproduce_script}` : 'Static-analysis verdict. See proof of concept for the source evidence.'}</div>
     </>
   );
 }
@@ -45,7 +45,7 @@ export function PSExport() {
       <div className="page-head">
         <div>
           <h1>PS deliverable export</h1>
-          <p>Every finding in the exact field order PS 26163 names. Also generated as <code>report/ps-schema-export.md</code> — never hand-typed.</p>
+          <p>Every finding in the exact field order PS 26163 names. Also generated as <code>report/ps-schema-export.md</code>, never hand-typed.</p>
         </div>
       </div>
       <div className="stack">

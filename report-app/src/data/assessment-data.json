@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-29T12:39:34.371Z",
+  "generated_at": "2026-09-29T13:13:26.042Z",
   "generator": "engine/report/build-report-data.mjs — regenerate, never hand-edit report-app/src/data/assessment-data.json directly",
   "summary": {
     "total_findings": 13,
