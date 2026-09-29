@@ -22,7 +22,7 @@ function buildLines(): Line[] {
   return lines;
 }
 
-export function TerminalReplay() {
+export function TerminalReplay({ startDelay = 0 }: { startDelay?: number }) {
   const lines = useMemo(buildLines, []);
   const [shown, setShown] = useState(0);
   const [typed, setTyped] = useState(0);
@@ -33,7 +33,13 @@ export function TerminalReplay() {
   useEffect(() => {
     setShown(0);
     setTyped(0);
-    let t = 0;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      setTyped(cmd.length);
+      setShown(lines.length);
+      return;
+    }
+    let t = run === 0 ? startDelay : 0;
     const timers: number[] = [];
     for (let i = 1; i <= cmd.length; i++) {
       t += 28;
@@ -45,7 +51,7 @@ export function TerminalReplay() {
       timers.push(window.setTimeout(() => setShown(i), t));
     }
     return () => timers.forEach(clearTimeout);
-  }, [run, cmd.length, lines]);
+  }, [run, cmd.length, lines, startDelay]);
 
   const done = shown >= lines.length;
 

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { CapsuleNav } from '../../components/ui';
+import { PillTabs } from '../../components/PillTabs';
 import { WORKFLOW_URL } from '../../data';
 
 const TABS = [
@@ -17,11 +18,7 @@ export function Shell({ path, go, children }: { path: string; go: (p: string) =>
     <>
       <CapsuleNav
         onHome={() => go('/')}
-        links={TABS.map((t) => (
-          <button key={t.path} className={`capsule-link ${active(t.path) ? 'active' : ''}`} onClick={() => go(t.path)}>
-            {t.label}
-          </button>
-        ))}
+        links={<PillTabs tabs={TABS} isActive={active} onSelect={go} />}
         right={
           <a className="btn btn-white btn-sm" href={WORKFLOW_URL} target="_blank" rel="noreferrer">
             Run workflow <ArrowUpRight size={14} />

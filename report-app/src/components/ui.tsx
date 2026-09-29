@@ -2,28 +2,11 @@ import type { ReactNode } from 'react';
 import { statusMeta, verdictMeta } from '../lib/status';
 import type { CoverageVerdict, FindingStatus } from '../types';
 
-export function LogoMark({ size = 22 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M7 3H5a2 2 0 0 0-2 2v2" />
-      <path d="M17 3h2a2 2 0 0 1 2 2v2" />
-      <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
-      <path d="M17 21h2a2 2 0 0 0 2-2v-2" />
-      <path d="M12 6v4.2M12 13.8V18" stroke="var(--color-primary-400)" strokeWidth="2.4" />
-      <circle cx="12" cy="12" r="1.3" fill="var(--color-primary-400)" stroke="none" />
-    </svg>
-  );
-}
-
 export function Logo({ onClick }: { onClick: () => void }) {
   return (
-    <div className="logo" onClick={onClick} role="link" aria-label="Home">
-      <LogoMark />
-      <div>
-        <div className="logo-word">SEAM</div>
-        <div className="logo-sub">WorldMonitor · SIH 26163</div>
-      </div>
-    </div>
+    <button type="button" className="logo" onClick={onClick} aria-label="SEAM home">
+      <span className="logo-word">SEAM</span>
+    </button>
   );
 }
 

@@ -1,12 +1,50 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ArrowUpRight, GitBranch, Server, ScanSearch, Gauge, FlaskConical, FileCheck2,
-  ShieldCheck, Layers, Bug, Activity, Check, X, Minus, Lock, Play,
+  ShieldCheck, Layers, Bug, Activity, Check, X, Minus, Lock, Play, Workflow, LayoutGrid, Scale, SquareTerminal,
 } from 'lucide-react';
 import { data, REPO_URL, WORKFLOW_URL, TARGET_URL, findingById, pinnedCommit } from '../data';
 import { CapsuleNav, MetricCard, VerdictBadge } from '../components/ui';
 import { TerminalReplay } from '../components/TerminalReplay';
+import { MagnificationDock } from '../components/MagnificationDock';
 import { verdictMeta } from '../lib/status';
+
+const SECTIONS = [
+  { id: 'how', label: 'How it works', icon: <Workflow /> },
+  { id: 'coverage', label: 'Coverage', icon: <LayoutGrid /> },
+  { id: 'evidence', label: 'Evidence', icon: <FlaskConical /> },
+  { id: 'safety', label: 'Safety', icon: <Lock /> },
+  { id: 'benchmarks', label: 'Benchmarks', icon: <Gauge /> },
+  { id: 'compare', label: 'Comparison', icon: <Scale /> },
+];
+
+function useDockState(heroRef: React.RefObject<HTMLElement | null>) {
+  const [pastHero, setPastHero] = useState(false);
+  const [active, setActive] = useState<string | null>(null);
+
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+    const io = new IntersectionObserver(([e]) => setPastHero(!e.isIntersecting), { threshold: 0.15 });
+    io.observe(hero);
+    return () => io.disconnect();
+  }, [heroRef]);
+
+  useEffect(() => {
+    const els = SECTIONS.map((s) => document.getElementById(s.id)).filter((e): e is HTMLElement => !!e);
+    const io = new IntersectionObserver(
+      (entries) => {
+        const hit = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (hit) setActive(hit.target.id);
+      },
+      { rootMargin: '-40% 0px -55% 0px' },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
+  return { pastHero, active };
+}
 
 function ev(id: string, key: string): number | undefined {
   const v = findingById(id)?.evidence_summary?.[key];
@@ -44,6 +82,12 @@ export function Landing({ go }: { go: (p: string) => void }) {
   ].filter((r): r is { id: string; what: string; n: number } => typeof r.n === 'number');
   const fpMax = Math.max(1, ...fps.map((r) => r.n));
   const openConsole = () => go('/console');
+  const heroRef = useRef<HTMLElement>(null);
+  const { pastHero, active } = useDockState(heroRef);
+  const dockItems = [
+    ...SECTIONS.map((s) => ({ id: s.id, label: s.label, icon: s.icon, active: active === s.id, onClick: () => scrollTo(s.id) })),
+    { id: 'console', label: 'Open console', icon: <SquareTerminal />, primary: true, onClick: openConsole },
+  ];
 
   const stages = [
     { icon: <GitBranch size={18} />, title: 'Pin the source', body: 'Clone the public repository at one exact commit.', stat: `commit ${pinnedCommit}` },
@@ -59,15 +103,7 @@ export function Landing({ go }: { go: (p: string) => void }) {
       <CapsuleNav
         onHome={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         className="landing"
-        links={
-          <>
-            <button className="capsule-link" onClick={() => scrollTo('how')}>How it works</button>
-            <button className="capsule-link" onClick={() => scrollTo('coverage')}>Coverage</button>
-            <button className="capsule-link" onClick={() => scrollTo('evidence')}>Evidence</button>
-            <button className="capsule-link" onClick={() => scrollTo('safety')}>Safety</button>
-            <button className="capsule-link" onClick={() => scrollTo('benchmarks')}>Benchmarks</button>
-          </>
-        }
+        links={null}
         right={
           <>
             <a className="btn btn-ghost-dark btn-sm hide-sm" href={REPO_URL} target="_blank" rel="noreferrer">
@@ -79,27 +115,30 @@ export function Landing({ go }: { go: (p: string) => void }) {
       />
 
       <main id="main" tabIndex={-1} style={{ outline: 'none' }}>
-        <header className="hero">
+        <header className="hero" ref={heroRef}>
           <div className="container hero-grid">
-            <div className="enter">
-              <span className="eyebrow">SIH 26163 for NTRO</span>
-              <h1>Don't trust our slides. Inspect the evidence.</h1>
-              <p className="lede">SEAM tested a real local copy of WorldMonitor across seven scope areas and scored every verdict in code.</p>
-              <div className="hero-ctas">
+            <div>
+              <span className="eyebrow reveal" style={{ ['--d' as string]: '0ms' }}>SIH 26163 for NTRO</span>
+              <h1>
+                <span className="line"><span className="reveal" style={{ ['--d' as string]: '80ms' }}>Don't trust our slides.</span></span>
+                <span className="line"><span className="reveal" style={{ ['--d' as string]: '200ms' }}>Inspect the evidence.</span></span>
+              </h1>
+              <p className="lede reveal" style={{ ['--d' as string]: '360ms' }}>SEAM tested a real local copy of WorldMonitor across seven scope areas and scored every verdict in code.</p>
+              <div className="hero-ctas reveal" style={{ ['--d' as string]: '460ms' }}>
                 <button className="btn btn-primary" onClick={openConsole}>Open console</button>
                 <a className="btn btn-secondary" href={WORKFLOW_URL} target="_blank" rel="noreferrer">
                   <Play size={15} /> Run workflow
                 </a>
               </div>
             </div>
-            <div className="enter" style={{ animationDelay: '120ms' }}>
-              <TerminalReplay />
+            <div className="terminal-stage reveal" style={{ ['--d' as string]: '300ms' }}>
+              <TerminalReplay startDelay={950} />
             </div>
           </div>
         </header>
 
         <div className="container">
-          <div className="grid-4" style={{ marginTop: '3rem' }}>
+          <div className="grid-4 overlap-strip">
             <MetricCard disk="orange" icon={<Layers size={20} />} title="Scope areas with evidence" value={`${data.summary.scope_areas_with_evidence} of 7`} sub={`${data.summary.total_findings} verdicts in total`} />
             <MetricCard disk="dark" icon={<Activity size={20} />} title="Endpoints inventoried" value={inv?.total_endpoints ?? 'n/a'} sub={inv ? `${inv.gateway_routes} gateway routes` : undefined} />
             <MetricCard disk="yellow" icon={<Bug size={20} />} title="Prior advisories mapped" value={data.register.advisories.length} sub={`${data.register.count_published} published, ${data.register.count_draft} draft`} />
@@ -276,7 +315,7 @@ export function Landing({ go }: { go: (p: string) => void }) {
             </div>
           </section>
 
-          <section className="section">
+          <section className="section" id="compare">
             <div className="section-head">
               <h2>Scanned before. Here's what's different.</h2>
               <p>
@@ -324,6 +363,7 @@ npm run assess`}</code></pre>
           </footer>
         </div>
       </main>
+      <MagnificationDock items={dockItems} visible={pastHero} />
     </div>
   );
 }
