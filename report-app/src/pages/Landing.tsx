@@ -9,6 +9,8 @@ import { TerminalReplay } from '../components/TerminalReplay';
 import { MagnificationDock } from '../components/MagnificationDock';
 import { PinnedPipeline } from '../components/PinnedPipeline';
 import { ScopePan } from '../components/ScopePan';
+import { SafetyGate } from '../components/SafetyGate';
+import { WalletBreach } from '../components/WalletBreach';
 
 const SECTIONS = [
   { id: 'how', label: 'How it works', icon: <Workflow /> },
@@ -185,31 +187,15 @@ export function Landing({ go }: { go: (p: string) => void }) {
                     <button className="btn btn-primary btn-sm" onClick={() => go('/console/findings/WM-002')}>Open WM-002</button>
                     <code>bash findings/WM-002/reproduce.sh</code>
                   </div>
+                  <ol className="trace" aria-label="What happens to one attack call">
+                    <li><b>Call arrives</b><span>A request the upstream will reject as malformed.</span></li>
+                    <li><b>Slot reserved</b><span>The attacker quota drops by one.</span></li>
+                    <li className="paid"><b>Upstream called</b><span>The owner is billed for the call.</span></li>
+                    <li className="hot"><b>Slot refunded</b><span>The attacker quota is restored. The bill is not.</span></li>
+                  </ol>
                 </div>
                 <div className="spotlight-viz">
-                  <div className="flow" aria-label="Request flow">
-                    <span className="node">request</span><span className="arrow" aria-hidden>→</span>
-                    <span className="node">reserve slot</span><span className="arrow" aria-hidden>→</span>
-                    <span className="node">paid upstream call</span><span className="arrow" aria-hidden>→</span>
-                    <span className="node hot">refund if "malformed"</span>
-                  </div>
-                  <div className="versus">
-                    <div className="vs">
-                      <div className="vs-label">Vulnerable</div>
-                      <div className="vs-num" style={{ color: 'var(--color-primary-600)' }}>{dow.vulnBilled}</div>
-                      <div className="vs-cap">calls billed to the owner</div>
-                      <div className="tbar" style={{ width: `${(dow.vulnBilled / dow.calls) * 100}%`, background: 'var(--color-primary-500)' }} />
-                      <div className="vs-foot">Attacker quota used: <b>{dow.vulnUsed}</b></div>
-                    </div>
-                    <div className="vs">
-                      <div className="vs-label">Patched</div>
-                      <div className="vs-num" style={{ color: 'var(--color-accent-700)' }}>{dow.patchBilled}</div>
-                      <div className="vs-cap">calls billed to the owner</div>
-                      <div className="tbar" style={{ width: `${(dow.patchBilled / dow.calls) * 100}%`, background: 'var(--color-accent-500)' }} />
-                      <div className="vs-foot">Attacker quota used: <b>{dow.patchUsed} of {dow.budget}</b></div>
-                    </div>
-                  </div>
-                  <p className="viz-note">The same {dow.calls} attack calls against each variant, with a daily budget of {dow.budget}. Figures come from the latest regression run.</p>
+                  <WalletBreach dow={dow} />
                 </div>
               </div>
             </section>
@@ -232,19 +218,7 @@ export function Landing({ go }: { go: (p: string) => void }) {
                   <div className="rule"><Check size={16} /> No account created on the target or any identity provider.</div>
                 </div>
               </div>
-              <div className="gate" role="img" aria-label="Scanner requests pass through safe-http.mjs: localhost is allowed, worldmonitor.app is refused">
-                <div className="gate-box">
-                  <div className="h">Scanner request</div>
-                  <div className="m">engine/scanners/*.mjs</div>
-                </div>
-                <div className="gate-core">safe-http<br />.mjs</div>
-                <div className="targets">
-                  <div className="target allow"><span>localhost:3000</span><Check size={15} /></div>
-                  <div className="target allow"><span>127.0.0.1 and ::1</span><Check size={15} /></div>
-                  <div className="target deny"><span>worldmonitor.app</span><X size={15} /></div>
-                  <div className="target deny"><span>worldmonitor.app.evil.com</span><X size={15} /></div>
-                </div>
-              </div>
+              <SafetyGate />
             </div>
           </section>
 
