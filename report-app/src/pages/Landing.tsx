@@ -4,10 +4,11 @@ import {
   ShieldCheck, Layers, Bug, Activity, Check, X, Minus, Lock, Play, Workflow, LayoutGrid, Scale, SquareTerminal,
 } from 'lucide-react';
 import { data, REPO_URL, WORKFLOW_URL, TARGET_URL, findingById, pinnedCommit } from '../data';
-import { CapsuleNav, MetricCard, VerdictBadge } from '../components/ui';
+import { CapsuleNav, MetricCard } from '../components/ui';
 import { TerminalReplay } from '../components/TerminalReplay';
 import { MagnificationDock } from '../components/MagnificationDock';
-import { verdictMeta } from '../lib/status';
+import { PinnedPipeline } from '../components/PinnedPipeline';
+import { ScopePan } from '../components/ScopePan';
 
 const SECTIONS = [
   { id: 'how', label: 'How it works', icon: <Workflow /> },
@@ -73,7 +74,6 @@ export function Landing({ go }: { go: (p: string) => void }) {
   const regPass = data.regression_results.filter((r) => r.pass).length;
   const regTotal = data.regression_results.length;
   const patches = data.findings.filter((f) => f.has_remediation_patch).length;
-  const cov = Object.values(data.coverage_matrix);
   const dow = dowNumbers();
   const fps = [
     { id: 'WM-004', what: 'CORS audit', n: ev('WM-004', 'false_positives_eliminated_by_heuristic_refinement') },
@@ -90,12 +90,12 @@ export function Landing({ go }: { go: (p: string) => void }) {
   ];
 
   const stages = [
-    { icon: <GitBranch size={18} />, title: 'Pin the source', body: 'Clone the public repository at one exact commit.', stat: `commit ${pinnedCommit}` },
-    { icon: <Server size={18} />, title: 'Run it locally', body: 'Stand up the real app on localhost:3000, never the live site.', stat: inv ? `${inv.total_endpoints} endpoints inventoried` : 'localhost:3000' },
-    { icon: <ScanSearch size={18} />, title: 'Scan seven areas', body: 'One scanner per PS scope area, including a TypeScript AST pass.', stat: `${ev('WM-009', 'src_files_scanned') ?? 'n/a'} files parsed` },
-    { icon: <Gauge size={18} />, title: 'Score in code', body: 'CVSS 3.1 and 4.0 computed by our calculators; EPSS where a CVE exists.', stat: 'CVSS 3.1, 4.0 and EPSS' },
-    { icon: <FlaskConical size={18} />, title: 'Reproduce', body: 'Vulnerable and patched lab pairs, re-run on every build.', stat: `${regPass}/${regTotal} regressions pass` },
-    { icon: <FileCheck2 size={18} />, title: 'Report and patch', body: 'PS-format export, CERT-In report and git-verified diffs.', stat: `${patches} verified patches` },
+    { icon: <GitBranch size={18} />, title: 'Pin the source', body: 'Clone the public repository at one exact commit.', stat: `commit ${pinnedCommit}`, file: 'lab/fetch-target-source.sh' },
+    { icon: <Server size={18} />, title: 'Run it locally', body: 'Stand up the real app on localhost:3000, never the live site.', stat: inv ? `${inv.total_endpoints} endpoints inventoried` : 'localhost:3000', file: 'npm run instance:up' },
+    { icon: <ScanSearch size={18} />, title: 'Scan seven areas', body: 'One scanner per PS scope area, including a TypeScript AST pass.', stat: `${ev('WM-009', 'src_files_scanned') ?? 'n/a'} files parsed`, file: 'npm run scan:all-static' },
+    { icon: <Gauge size={18} />, title: 'Score in code', body: 'CVSS 3.1 and 4.0 computed by our calculators; EPSS where a CVE exists.', stat: 'CVSS 3.1, 4.0 and EPSS', file: 'engine/core/cvss40.mjs' },
+    { icon: <FlaskConical size={18} />, title: 'Reproduce', body: 'Vulnerable and patched lab pairs, re-run on every build.', stat: `${regPass}/${regTotal} regressions pass`, file: 'framework/regression-harness/run.mjs' },
+    { icon: <FileCheck2 size={18} />, title: 'Report and patch', body: 'PS-format export, CERT-In report and git-verified diffs.', stat: `${patches} verified patches`, file: 'engine/report/ps-export.mjs' },
   ];
 
   return (
@@ -150,45 +150,14 @@ export function Landing({ go }: { go: (p: string) => void }) {
               <h2>One pipeline, from pinned commit to patch.</h2>
               <p>Every stage runs in CI on each push. Nothing on this site is assembled by hand.</p>
             </div>
-            <ol className="card rail">
-              {stages.map((s, i) => (
-                <li key={s.title} className="rail-step">
-                  <div className="rail-top">
-                    <span className="rail-icon">{s.icon}</span>
-                    <span className="rail-num">{String(i + 1).padStart(2, '0')}</span>
-                  </div>
-                  <h4>{s.title}</h4>
-                  <p>{s.body}</p>
-                  <div className="rail-stat">{s.stat}</div>
-                </li>
-              ))}
-            </ol>
+            <PinnedPipeline stages={stages} />
           </section>
 
           <section className="section" id="coverage">
             <div className="section-head">
               <h2>All seven scope areas, each with a verdict.</h2>
             </div>
-            <div className="coverage">
-              {cov.map((c) => (
-                <div key={c.area_number} className="card cov" style={{ ['--tone' as string]: verdictMeta(c.verdict).dot }}>
-                  <div className="area">Area {c.area_number}</div>
-                  <h4>{c.label}</h4>
-                  <div><VerdictBadge verdict={c.verdict} /></div>
-                  <div className="ids">
-                    {c.finding_ids.map((id) => (
-                      <button key={id} className="id-chip" onClick={() => go(`/console/findings/${id}`)} aria-label={`Open finding ${id}`}>{id}</button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              <div className="cov-key">
-                <h4>Reading the colours</h4>
-                <p><b>Red:</b> a real, published vulnerability class was reproduced in that area.</p>
-                <p><b>Green:</b> we attacked the control and it held.</p>
-                <p><b>Amber:</b> suspicious, but not yet provable, so not claimed.</p>
-              </div>
-            </div>
+            <ScopePan go={go} />
           </section>
 
           {dow && (
