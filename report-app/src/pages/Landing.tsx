@@ -148,16 +148,16 @@ export function Landing({ go }: { go: (p: string) => void }) {
           </div>
 
           <section className="section" id="how">
-            <div className="section-head">
-              <h2>One pipeline, from pinned commit to patch.</h2>
+            <div className="section-head" style={{ maxWidth: '100%', textAlign: 'center' }}>
+              <h2 style={{ fontSize: 'clamp(2.6rem, 5vw, 4rem)' }}>One pipeline, from pinned commit to patch.</h2>
               <p>Every stage runs in CI on each push. Nothing on this site is assembled by hand.</p>
             </div>
             <PinnedPipeline stages={stages} />
           </section>
 
           <section className="section" id="coverage">
-            <div className="section-head">
-              <h2>All seven scope areas, each with a verdict.</h2>
+            <div className="section-head" style={{ maxWidth: '100%', textAlign: 'center' }}>
+              <h2 style={{ fontSize: 'clamp(2.6rem, 5vw, 4rem)' }}>All seven scope areas, each with a verdict.</h2>
             </div>
             <ScopePan go={go} />
           </section>
