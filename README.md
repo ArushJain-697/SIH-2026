@@ -20,21 +20,6 @@ Three pillars: **Hook** (audit the seams an autonomous pipeline leaves) · **Spi
 
 **Forbidden terms and strings for all demo copy:** see [`docs/LANDMINES.md`](./docs/LANDMINES.md). Architecture facts may be cited **only** from [`docs/ground-truth.md`](./docs/ground-truth.md).
 
-## Ownership Map
-
-| Area | Primary owner | Backup | Expected output |
-| --- | --- | --- | --- |
-| Thesis / claim discipline | _confirm name_ | _confirm name_ | Claim block, landmine register, fact audit |
-| Ground truth / advisory register | _confirm name_ | _confirm name_ | `docs/ground-truth.md`, `register/advisories.json` |
-| Local lab + mock upstream | _confirm name_ | _confirm name_ | Reproducible `localhost` instance, metered-API stub |
-| Framework (Seam-Linter / Regression Harness) | _confirm name_ | _confirm name_ | Ranked seam candidates, advisory regression gate |
-| Findings + evidence | _confirm name_ | _confirm name_ | Schema-valid findings with `reproduce.sh` |
-| Report (CERT-In format) | _confirm name_ | _confirm name_ | Exec summary, coverage matrix, remediation roadmap |
-| Deck + demo | _confirm name_ | _confirm name_ | 10 slides, 3-minute kill shot, Q&A matrix |
-| **Final demo device** | _confirm name_ | _confirm name_ | Reproducible local demo run |
-
-> ⚠️ Ticket #1 stays PARTIAL until these names are filled in.
-
 ## Repository layout
 
 ```text
