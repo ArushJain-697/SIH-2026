@@ -1,0 +1,39 @@
+{
+  "id": "WM-009",
+  "title": "Premium-fetch authorization wrapper — real AST-based re-derivation (v1's explicitly deferred check) — all 9 real client call sites correctly gated",
+  "status": "VERIFIED-SECURE",
+  "component": "src/ (791 real, non-generated .ts/.tsx files) vs. src/generated/client/*/service_client.ts + src/shared/premium-paths.ts — real target source, parsed with the actual TypeScript Compiler API",
+  "trust_boundary": 2,
+  "control_tested": "Real AST parsing (not regex) of every non-generated source file to find every `new <X>ServiceClient(...)` construction, trace every method call made on that bound instance within the same file, cross-reference each called method against the real premium-path registry (via the same generated-client method->path extraction the target's own enforcement script uses), and verify the constructing options object's `fetch:` property is the literal `premiumFetch` identifier or the one documented delegating adapter (`proFreshRpcFetch`) whenever a premium method is actually called.",
+
+  "tags": {
+    "cwe": ["CWE-863", "CWE-285"],
+    "wstg": "WSTG-ATHZ-01",
+    "owasp_api": "API5:2023"
+  },
+
+  "description": "v1 of this assessment explicitly deferred this check as future work, stating it 'needs a full TypeScript AST parser' rather than approximate it with a misleading regex (docs/coverage-matrix.md). This pass builds that real check. scripts/enforce-premium-fetch.mjs (the target's own 470-line AST-based CI invariant) exists specifically because this exact class of bug happened for real: its own comments document 'the HIGH(new) #1 class from #3242 review — SupplyChainServiceClient was constructed with globalThis.fetch (the generated default) and pro users silently got 401s the generated client swallowed into empty-fallback panels.' Our independent parser found and checked every one of 791 real source files, located 9 real client instances across 7 files that actually call at least one premium-gated method, and verified all 9 — including a fresh construction of that exact SupplyChainServiceClient class the bug's own history names — correctly pass premiumFetch (or the one documented, narrower delegating adapter proFreshRpcFetch) rather than an unauthenticated globalThis.fetch.",
+  "preconditions": "N/A — static analysis, no running instance required. Needs the isolated engine/scanners/ast-tools/ TypeScript install (the one dependency this project's otherwise zero-dependency engine uses, and only for this check).",
+  "business_impact": "N/A (control held). This closes the single largest honestly-flagged gap from the earlier pass of this assessment. The historical bug class this check targets (documented in the target's own code) was a real, shipped Pro-tier authorization bypass — a paying customer's premium call silently downgrading to an unauthenticated, empty-fallback response. Confirming its absence with an independent parser, not just trusting the target's own CI, is exactly the kind of verification this project's whole methodology is built around.",
+  "remediation": "No fix required. This check, like the target's own, is only as good as its most recent run — recommend re-running engine/scanners/authz-access.mjs whenever a new ServiceClient is added or a new premium path is declared.",
+
+  "references": {
+    "ghsa": null,
+    "external": [
+      "scripts/enforce-premium-fetch.mjs (the target's own real AST-based invariant this independently re-derives)",
+      "engine/scanners/authz-access.mjs (this project's independent re-derivation)"
+    ]
+  },
+
+  "evidence_summary": {
+    "target_commit": "c7859c70e529db67cb871d2199f0e24d728679c1",
+    "src_files_scanned": 791,
+    "service_client_classes_found": 38,
+    "premium_rpc_paths": 38,
+    "client_instances_calling_a_premium_method": 9,
+    "unsafe_instances_found": 0,
+    "parser": "TypeScript Compiler API (ts.createSourceFile), not regex"
+  },
+
+  "scope_areas": [2]
+}

@@ -1,0 +1,199 @@
+{
+  "tool": "authz-access-scanner",
+  "scope_area": 2,
+  "target_commit": "c7859c70e529db67cb871d2199f0e24d728679c1",
+  "checked_at": "2026-09-29T05:20:56.158Z",
+  "method": "Real TypeScript AST parsing (ts.createSourceFile) via engine/scanners/ast-tools/ — not a regex.",
+  "stats": {
+    "src_files_scanned": 791,
+    "service_client_classes_found": 38,
+    "premium_rpc_paths": 38,
+    "client_instances_calling_a_premium_method": 9,
+    "unsafe_instances": 0
+  },
+  "findings": [
+    {
+      "file": "src/features/stock-research/stock-research-overlay.ts",
+      "line": 199,
+      "client_class": "MarketServiceClient",
+      "bound_name": "client",
+      "fetch_option": "premiumFetch",
+      "premium_methods_called": [
+        {
+          "method": "analyzeStock",
+          "path": "/api/market/v1/analyze-stock"
+        }
+      ],
+      "safe": true
+    },
+    {
+      "file": "src/services/decision-brief.ts",
+      "line": 23,
+      "client_class": "SupplyChainServiceClient",
+      "bound_name": "supply",
+      "fetch_option": "premiumFetch",
+      "premium_methods_called": [
+        {
+          "method": "getCountryProducts",
+          "path": "/api/supply-chain/v1/get-country-products"
+        },
+        {
+          "method": "getCountryVulnerabilities",
+          "path": "/api/supply-chain/v1/get-country-vulnerabilities"
+        },
+        {
+          "method": "getMineralProduction",
+          "path": "/api/supply-chain/v1/get-mineral-production"
+        }
+      ],
+      "safe": true
+    },
+    {
+      "file": "src/services/insider-transactions.ts",
+      "line": 6,
+      "client_class": "MarketServiceClient",
+      "bound_name": "client",
+      "fetch_option": "premiumFetch",
+      "premium_methods_called": [
+        {
+          "method": "getInsiderTransactions",
+          "path": "/api/market/v1/get-insider-transactions"
+        }
+      ],
+      "safe": true
+    },
+    {
+      "file": "src/services/market/index.ts",
+      "line": 19,
+      "client_class": "MarketServiceClient",
+      "bound_name": "client",
+      "fetch_option": "proFreshRpcFetch",
+      "premium_methods_called": [
+        {
+          "method": "getPhysicalPremiums",
+          "path": "/api/market/v1/get-physical-premiums"
+        },
+        {
+          "method": "getPhysicalDivergenceIndex",
+          "path": "/api/market/v1/get-physical-divergence-index"
+        }
+      ],
+      "safe": true
+    },
+    {
+      "file": "src/services/stock-analysis-history.ts",
+      "line": 10,
+      "client_class": "MarketServiceClient",
+      "bound_name": "client",
+      "fetch_option": "premiumFetch",
+      "premium_methods_called": [
+        {
+          "method": "getStockAnalysisHistory",
+          "path": "/api/market/v1/get-stock-analysis-history"
+        }
+      ],
+      "safe": true
+    },
+    {
+      "file": "src/services/stock-analysis.ts",
+      "line": 18,
+      "client_class": "MarketServiceClient",
+      "bound_name": "client",
+      "fetch_option": "premiumFetch",
+      "premium_methods_called": [
+        {
+          "method": "analyzeStock",
+          "path": "/api/market/v1/analyze-stock"
+        }
+      ],
+      "safe": true
+    },
+    {
+      "file": "src/services/stock-backtest.ts",
+      "line": 8,
+      "client_class": "MarketServiceClient",
+      "bound_name": "client",
+      "fetch_option": "premiumFetch",
+      "premium_methods_called": [
+        {
+          "method": "backtestStock",
+          "path": "/api/market/v1/backtest-stock"
+        },
+        {
+          "method": "listStoredStockBacktests",
+          "path": "/api/market/v1/list-stored-stock-backtests"
+        }
+      ],
+      "safe": true
+    },
+    {
+      "file": "src/services/supply-chain/index.ts",
+      "line": 84,
+      "client_class": "SupplyChainServiceClient",
+      "bound_name": "client",
+      "fetch_option": "premiumFetch",
+      "premium_methods_called": [
+        {
+          "method": "getMineralProduction",
+          "path": "/api/supply-chain/v1/get-mineral-production"
+        },
+        {
+          "method": "getCountryChokepointIndex",
+          "path": "/api/supply-chain/v1/get-country-chokepoint-index"
+        },
+        {
+          "method": "getBypassOptions",
+          "path": "/api/supply-chain/v1/get-bypass-options"
+        },
+        {
+          "method": "getCountryCostShock",
+          "path": "/api/supply-chain/v1/get-country-cost-shock"
+        },
+        {
+          "method": "getSectorDependency",
+          "path": "/api/supply-chain/v1/get-sector-dependency"
+        },
+        {
+          "method": "getRouteExplorerLane",
+          "path": "/api/supply-chain/v1/get-route-explorer-lane"
+        },
+        {
+          "method": "getRouteImpact",
+          "path": "/api/supply-chain/v1/get-route-impact"
+        },
+        {
+          "method": "getCountryProducts",
+          "path": "/api/supply-chain/v1/get-country-products"
+        },
+        {
+          "method": "getCountryVulnerabilities",
+          "path": "/api/supply-chain/v1/get-country-vulnerabilities"
+        },
+        {
+          "method": "getChokepointDependencies",
+          "path": "/api/supply-chain/v1/get-chokepoint-dependencies"
+        },
+        {
+          "method": "getMultiSectorCostShock",
+          "path": "/api/supply-chain/v1/get-multi-sector-cost-shock"
+        }
+      ],
+      "safe": true
+    },
+    {
+      "file": "src/services/threat-classifier.ts",
+      "line": 84,
+      "client_class": "IntelligenceServiceClient",
+      "bound_name": "classifyClient",
+      "fetch_option": "premiumFetch",
+      "premium_methods_called": [
+        {
+          "method": "classifyEvent",
+          "path": "/api/intelligence/v1/classify-event"
+        }
+      ],
+      "safe": true
+    }
+  ],
+  "verdict": "VERIFIED-SECURE"
+}

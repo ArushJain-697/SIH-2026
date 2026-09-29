@@ -1,0 +1,36 @@
+{
+  "id": "WM-011",
+  "title": "Idempotency-key handling — body-hash mismatch rejection, concurrent-conflict detection, and fail-closed scope validation all confirmed",
+  "status": "VERIFIED-SECURE",
+  "component": "api/_idempotency.js (283 lines, real target source)",
+  "trust_boundary": 4,
+  "control_tested": "Three checks against the real idempotency-key implementation, complementing WM-002/WM-003 (rate-limiting/DoW) with the other half of this PS scope area the PS itself names: (1) reusing an Idempotency-Key with a different request body is rejected with 422, not silently replayed; (2) a second request arriving while the first with the same key is still processing gets a 409 with Retry-After, not a race; (3) a missing/empty idempotency scope hard-fails with 500 rather than silently disabling duplicate-write protection.",
+
+  "tags": {
+    "cwe": ["CWE-345", "CWE-362", "CWE-636"],
+    "wstg": "WSTG-BUSL-03",
+    "owasp_api": "API4:2023"
+  },
+
+  "description": "The PS names 'rate limits, idempotency' together as this scope area's concern; idempotency had not been independently checked before this pass. api/_idempotency.js SHA-256-fingerprints the request body under the caller's Idempotency-Key. Reusing that key with a DIFFERENT body correctly returns 422 idempotency_key_reused rather than replaying a cached response for what is, semantically, a different request — closing a confused-deputy class where an idempotency key could otherwise leak a response across two unrelated calls. A second request racing in while the first is still 'processing' correctly gets 409 idempotency_conflict with a Retry-After header, rather than both proceeding and double-executing the underlying action (the exact TOCTOU class this project's whole thesis is about, here checked in the one place the target built a dedicated primitive specifically to prevent it). Most notably, the code's own comment reasons explicitly about the real-world consequence of getting this wrong: a missing/empty scope is treated as 'a server-side wiring bug, not a runtime condition' and hard-fails with 500 rather than silently falling through to a disabled/no-op state — because on a route like /api/create-checkout, failing open here would mean a retried request creates a second checkout session, i.e. a real double-charge risk.",
+  "preconditions": "N/A — static analysis, no running instance required.",
+  "business_impact": "N/A (control held). Reported because this is a rare case where the target's own code comments explicitly name the financial consequence a wrong design choice would have (duplicate checkout sessions), and the implementation matches that stated intent exactly. Verifying stated intent against actual code, not just reading the comment, is the whole point of this check.",
+  "remediation": "No fix required.",
+
+  "references": {
+    "ghsa": null,
+    "external": [
+      "engine/scanners/api-security.mjs (this project's independent scanner)",
+      "findings/WM-002/, findings/WM-003/ (companion PS scope-area-4 findings covering rate-limiting and Denial-of-Wallet)"
+    ]
+  },
+
+  "evidence_summary": {
+    "target_commit": "c7859c70e529db67cb871d2199f0e24d728679c1",
+    "body_hash_mismatch_rejected": true,
+    "concurrent_conflict_detected": true,
+    "scope_misconfiguration_fails_closed": true
+  },
+
+  "scope_areas": [4]
+}

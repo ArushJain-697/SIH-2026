@@ -1,0 +1,283 @@
+{
+  "tool": "sca-scanner",
+  "scope_area": null,
+  "target_commit": "fdc0af27b94e614e5a61f9bb26740d3156e98ae2",
+  "checked_at": "2026-09-29T05:32:45.514Z",
+  "npm_audit_summary": {
+    "info": 0,
+    "low": 0,
+    "moderate": 18,
+    "high": 10,
+    "critical": 0,
+    "total": 28
+  },
+  "total_dependencies": {
+    "prod": 781,
+    "dev": 559,
+    "optional": 150,
+    "peer": 394,
+    "peerOptional": 0,
+    "total": 1795
+  },
+  "unique_root_advisories": 8,
+  "findings": [
+    {
+      "advisory_title": "image-size: JXL and HEIF parsers allow denial of service through infinite loops",
+      "advisory_url": "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq",
+      "npm_audit_severity": "high",
+      "cwe": [
+        "CWE-835"
+      ],
+      "affected_packages": [
+        "image-size"
+      ],
+      "is_direct_dependency": false,
+      "reachability": {
+        "class": "live-request-path",
+        "evidence": [
+          "src/services/sign-up-resume.ts",
+          "src/services/clerk.ts"
+        ],
+        "via": "@clerk/clerk-js"
+      },
+      "sample_ancestry_chain": [
+        "image-size",
+        "metro",
+        "@react-native/community-cli-plugin",
+        "react-native",
+        "@react-native-async-storage/async-storage",
+        "@solana-mobile/wallet-adapter-mobile",
+        "@solana/wallet-adapter-react",
+        "@clerk/clerk-js",
+        "(depth limit reached)"
+      ],
+      "cvss": {
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+        "npm_audit_reported_score": 7.5,
+        "our_independently_computed_score": 7.5,
+        "match": true
+      },
+      "cvss_note": "CVSS vector embedded in npm audit's own output (sourced from the real GHSA database), independently cross-checked against our own CVSS 3.1 calculator."
+    },
+    {
+      "advisory_title": "image-size: ICNS parser allows denial of service through an infinite loop",
+      "advisory_url": "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr",
+      "npm_audit_severity": "high",
+      "cwe": [
+        "CWE-835"
+      ],
+      "affected_packages": [
+        "image-size"
+      ],
+      "is_direct_dependency": false,
+      "reachability": {
+        "class": "live-request-path",
+        "evidence": [
+          "src/services/sign-up-resume.ts",
+          "src/services/clerk.ts"
+        ],
+        "via": "@clerk/clerk-js"
+      },
+      "sample_ancestry_chain": [
+        "image-size",
+        "metro",
+        "@react-native/community-cli-plugin",
+        "react-native",
+        "@react-native-async-storage/async-storage",
+        "@solana-mobile/wallet-adapter-mobile",
+        "@solana/wallet-adapter-react",
+        "@clerk/clerk-js",
+        "(depth limit reached)"
+      ],
+      "cvss": {
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+        "npm_audit_reported_score": 7.5,
+        "our_independently_computed_score": 7.5,
+        "match": true
+      },
+      "cvss_note": "CVSS vector embedded in npm audit's own output (sourced from the real GHSA database), independently cross-checked against our own CVSS 3.1 calculator."
+    },
+    {
+      "advisory_title": "Vitest: Path Traversal / Arbitrary File Read via @vitest/mocker Redirect Mock",
+      "advisory_url": "https://github.com/advisories/GHSA-82fw-gwwq-j7x9",
+      "npm_audit_severity": "moderate",
+      "cwe": [
+        "CWE-22"
+      ],
+      "affected_packages": [
+        "@vitest/mocker",
+        "vitest"
+      ],
+      "is_direct_dependency": false,
+      "reachability": {
+        "class": "transitive-dependency-unclassified-usage",
+        "evidence": []
+      },
+      "sample_ancestry_chain": [
+        "@vitest/mocker",
+        "vitest"
+      ],
+      "cvss": {
+        "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+        "npm_audit_reported_score": 5.9,
+        "our_independently_computed_score": 5.9,
+        "match": true
+      },
+      "cvss_note": "CVSS vector embedded in npm audit's own output (sourced from the real GHSA database), independently cross-checked against our own CVSS 3.1 calculator."
+    },
+    {
+      "advisory_title": "ip-address: Address6.isLinkLocal() recognizes fe80::/64 rather than fe80::/10, allowing SSRF and trust-boundary bypass to on-link hosts",
+      "advisory_url": "https://github.com/advisories/GHSA-rpw4-54j3-4h4q",
+      "npm_audit_severity": "moderate",
+      "cwe": [
+        "CWE-697",
+        "CWE-918"
+      ],
+      "affected_packages": [
+        "ip-address"
+      ],
+      "is_direct_dependency": false,
+      "reachability": {
+        "class": "operational-script-only",
+        "evidence": [
+          "scripts/telegram/session-auth.mjs"
+        ],
+        "via": "telegram"
+      },
+      "sample_ancestry_chain": [
+        "ip-address",
+        "socks",
+        "telegram",
+        "(root — direct dependency)"
+      ],
+      "cvss": null,
+      "cvss_note": "This advisory did not include an embedded CVSS vector in npm audit's output, and the GitHub Advisory API's unauthenticated rate limit was exhausted by an earlier tool in this session — severity above is npm audit's own GHSA-sourced label, not independently cross-validated this run."
+    },
+    {
+      "advisory_title": "ip-address: no classifier recognizes the NAT64 local-use range 64:ff9b:1::/48, allowing SSRF and trust-boundary bypass",
+      "advisory_url": "https://github.com/advisories/GHSA-2vr4-cq9g-pvrc",
+      "npm_audit_severity": "moderate",
+      "cwe": [
+        "CWE-918"
+      ],
+      "affected_packages": [
+        "ip-address"
+      ],
+      "is_direct_dependency": false,
+      "reachability": {
+        "class": "operational-script-only",
+        "evidence": [
+          "scripts/telegram/session-auth.mjs"
+        ],
+        "via": "telegram"
+      },
+      "sample_ancestry_chain": [
+        "ip-address",
+        "socks",
+        "telegram",
+        "(root — direct dependency)"
+      ],
+      "cvss": null,
+      "cvss_note": "This advisory did not include an embedded CVSS vector in npm audit's output, and the GitHub Advisory API's unauthenticated rate limit was exhausted by an earlier tool in this session — severity above is npm audit's own GHSA-sourced label, not independently cross-validated this run."
+    },
+    {
+      "advisory_title": "stream-json: pick/ignore/filter/replace filters are O(depth²) on nested input — small crafted JSON blocks the event loop for seconds→minutes (DoS)",
+      "advisory_url": "https://github.com/advisories/GHSA-528h-pc64-c93x",
+      "npm_audit_severity": "moderate",
+      "cwe": [
+        "CWE-407"
+      ],
+      "affected_packages": [
+        "stream-json"
+      ],
+      "is_direct_dependency": false,
+      "reachability": {
+        "class": "live-request-path",
+        "evidence": [
+          "src/services/sign-up-resume.ts",
+          "src/services/clerk.ts"
+        ],
+        "via": "@clerk/clerk-js"
+      },
+      "sample_ancestry_chain": [
+        "stream-json",
+        "jayson",
+        "@solana/web3.js",
+        "@solana-mobile/mobile-wallet-adapter-protocol-web3js",
+        "@solana-mobile/wallet-adapter-mobile",
+        "@solana/wallet-adapter-react",
+        "@clerk/clerk-js",
+        "(root — direct dependency)"
+      ],
+      "cvss": {
+        "vector": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+        "npm_audit_reported_score": 6.2,
+        "our_independently_computed_score": 6.2,
+        "match": true
+      },
+      "cvss_note": "CVSS vector embedded in npm audit's own output (sourced from the real GHSA database), independently cross-checked against our own CVSS 3.1 calculator."
+    },
+    {
+      "advisory_title": "undici vulnerable to Denial of Service via unhandled error in WebSocket permessage-deflate decompression",
+      "advisory_url": "https://github.com/advisories/GHSA-3wwx-pv8p-q78v",
+      "npm_audit_severity": "moderate",
+      "cwe": [
+        "CWE-248"
+      ],
+      "affected_packages": [
+        "undici"
+      ],
+      "is_direct_dependency": true,
+      "reachability": {
+        "class": "direct-dependency-unclassified-usage",
+        "evidence": []
+      },
+      "sample_ancestry_chain": [
+        "undici"
+      ],
+      "cvss": {
+        "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+        "npm_audit_reported_score": 5.9,
+        "our_independently_computed_score": 5.9,
+        "match": true
+      },
+      "cvss_note": "CVSS vector embedded in npm audit's own output (sourced from the real GHSA database), independently cross-checked against our own CVSS 3.1 calculator."
+    },
+    {
+      "advisory_title": "uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided",
+      "advisory_url": "https://github.com/advisories/GHSA-w5hq-g745-h8pq",
+      "npm_audit_severity": "moderate",
+      "cwe": [
+        "CWE-787",
+        "CWE-1285"
+      ],
+      "affected_packages": [
+        "uuid"
+      ],
+      "is_direct_dependency": false,
+      "reachability": {
+        "class": "live-request-path",
+        "evidence": [
+          "src/services/sign-up-resume.ts",
+          "src/services/clerk.ts"
+        ],
+        "via": "@clerk/clerk-js"
+      },
+      "sample_ancestry_chain": [
+        "uuid",
+        "exceljs"
+      ],
+      "cvss": {
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+        "npm_audit_reported_score": 7.5,
+        "our_independently_computed_score": 7.5,
+        "match": true
+      },
+      "cvss_note": "CVSS vector embedded in npm audit's own output (sourced from the real GHSA database), independently cross-checked against our own CVSS 3.1 calculator."
+    }
+  ],
+  "live_request_path_count": 4,
+  "operational_script_only_count": 2,
+  "verdict": "CANDIDATE-UNCONFIRMED",
+  "verdict_note": "4 advisory/advisories trace to a package actually imported by live request-handling code — needs manual triage before any severity claim."
+}

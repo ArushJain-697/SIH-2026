@@ -70,6 +70,22 @@ function main() {
         failures++;
       }
     }
+
+    // remediation_patch, if declared (build-map-advanced #E3), must exist
+    // and be a real, non-empty unified diff — not just a claimed filename.
+    if (finding.remediation_patch) {
+      const patchPath = join(ROOT, finding.remediation_patch);
+      if (!existsSync(patchPath)) {
+        console.error(`FAIL  ${dir}: remediation_patch "${finding.remediation_patch}" does not exist`);
+        failures++;
+      } else {
+        const patchText = readFileSync(patchPath, 'utf8');
+        if (!/^diff --git/m.test(patchText) || !/^[+-]/m.test(patchText)) {
+          console.error(`FAIL  ${dir}: remediation_patch "${finding.remediation_patch}" does not look like a real unified diff`);
+          failures++;
+        }
+      }
+    }
   }
 
   console.log('---');

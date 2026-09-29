@@ -1,0 +1,105 @@
+name: WorldMonitor Assessment — Full Run
+
+# Manually triggered from the Actions tab ("Run workflow" button) — this is
+# the whole engine end to end: fetch the real target, stand it up locally
+# inside the runner, run every scanner + the regression harness against it,
+# regenerate every derived doc, then publish the live React report to
+# GitHub Pages. Also runs on push to main so the published report never goes
+# stale relative to the findings actually committed.
+#
+# Safety note: engine/probe/safe-http.mjs hard-refuses any host that isn't
+# localhost/127.0.0.1/::1 — this workflow only ever talks to the WorldMonitor
+# instance it stands up itself inside the runner (localhost:3000), never the
+# real worldmonitor.app deployment. See docs/ROE.md.
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  assess:
+    runs-on: ubuntu-latest
+    outputs:
+      dynamic_ok: ${{ steps.wait-for-target.outputs.ready }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Offline unit + safety test suite
+        run: npm test
+
+      - name: Fetch real WorldMonitor source (public repo, static analysis only)
+        run: bash lab/fetch-target-source.sh
+
+      - name: Install target dependencies
+        run: npm run instance:install
+
+      - name: Install AST scanner sub-package (typescript, isolated)
+        run: cd engine/scanners/ast-tools && npm install
+
+      - name: Start the real target instance in the background
+        run: nohup npm run instance:up > /tmp/instance.log 2>&1 &
+
+      - name: Wait for the target instance to become ready
+        id: wait-for-target
+        run: |
+          ready=false
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/api/health > /dev/null; then
+              ready=true
+              break
+            fi
+            sleep 2
+          done
+          echo "ready=$ready" >> "$GITHUB_OUTPUT"
+          if [ "$ready" != "true" ]; then
+            echo "::warning::target instance never became ready within 60s — dynamic checks will be skipped, static-only this run"
+            tail -n 100 /tmp/instance.log || true
+          fi
+
+      - name: Run static scanners (all 7 scope areas' static coverage)
+        run: npm run scan:all-static
+
+      - name: Run dynamic secure-comms scan (live instance headers)
+        if: steps.wait-for-target.outputs.ready == 'true'
+        run: npm run dynamic-scan
+
+      - name: Regenerate proof spine + CERT-In-format report
+        run: npm run proof-spine && npm run report
+
+      - name: Validate every finding against the schema
+        run: npm run validate-findings
+
+      - name: Install report-app dependencies
+        run: npm --prefix report-app ci
+
+      - name: Build the report app (regenerates assessment-data.json + static bundle)
+        run: npm run report-app:build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: report-app/dist
+
+  deploy:
+    needs: assess
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

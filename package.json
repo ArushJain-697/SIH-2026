@@ -10,13 +10,27 @@
     "instance:install": "cd .cache/worldmonitor-src && npm install",
     "instance:up": "cd .cache/worldmonitor-src && npm run dev",
     "seam-lint": "node framework/seam-linter/analyze-invariants.mjs .cache/worldmonitor-src && node framework/seam-linter/rate-limit-coverage-check.mjs .cache/worldmonitor-src && node framework/seam-linter/cors-scan.mjs .cache/worldmonitor-src && node framework/seam-linter/cast-adjacency.mjs .cache/worldmonitor-src && node framework/seam-linter/chronological-orphans.mjs",
+    "endpoints": "node engine/inventory/build-endpoints.mjs .cache/worldmonitor-src",
+    "scan:auth-session": "node engine/scanners/auth-session.mjs .cache/worldmonitor-src",
+    "scan:authz-access": "node engine/scanners/authz-access.mjs .cache/worldmonitor-src",
+    "scan:input-validation": "node engine/scanners/input-validation.mjs .cache/worldmonitor-src",
+    "scan:api-security": "node engine/scanners/api-security.mjs .cache/worldmonitor-src",
+    "scan:secure-comms": "node engine/scanners/secure-comms.mjs http://localhost:3000/ .cache/worldmonitor-src",
+    "scan:sca": "node engine/scanners/sca.mjs .cache/worldmonitor-src && node engine/scanners/generate-sbom.mjs .cache/worldmonitor-src",
+    "scan:secrets": "node engine/scanners/secrets.mjs .cache/worldmonitor-src",
+    "scan:all-static": "npm run endpoints && npm run scan:auth-session && npm run scan:authz-access && npm run scan:input-validation && npm run scan:api-security && npm run scan:sca && npm run scan:secrets",
     "dynamic-scan": "node engine/scanners/secure-comms.mjs http://localhost:3000/ .cache/worldmonitor-src",
     "regress": "node framework/regression-harness/run.mjs",
     "validate-findings": "node tests/validate_findings.mjs",
     "scan-landmines": "node tests/scan_landmines.mjs",
     "lint-safety": "node tests/lint_no_raw_fetch.mjs",
     "proof-spine": "node framework/generate-proof-spine.mjs",
-    "report": "node framework/generate-report.mjs"
+    "report": "node framework/generate-report.mjs",
+    "report-app:data": "node engine/report/build-report-data.mjs",
+    "report-app:dev": "npm run report-app:data && npm --prefix report-app run dev -- --open",
+    "report-app:build": "npm run report-app:data && npm --prefix report-app run build",
+    "start": "npm run report-app:dev",
+    "assess": "npm run scan:all-static && npm run report-app:build"
   },
   "engines": {
     "node": ">=18"

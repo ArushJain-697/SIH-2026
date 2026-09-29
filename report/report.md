@@ -1,7 +1,7 @@
 # WorldMonitor Security Assessment — Report
 ### SIH 26163 · NTRO · "No Finding Without Proof"
 
-**Generated:** 2026-09-28T22:12:44.263Z (auto-assembled by `framework/generate-report.mjs` from `register/advisories.json` + `findings/*/finding.json` — do not hand-edit this file, edit the sources and regenerate)
+**Generated:** 2026-09-29T05:38:25.751Z (auto-assembled by `framework/generate-report.mjs` from `register/advisories.json` + `findings/*/finding.json` — do not hand-edit this file, edit the sources and regenerate)
 
 ---
 
@@ -17,8 +17,8 @@ This is a time-boxed, authorized security assessment of `github.com/koala73/worl
 | --- | --- |
 | REPRODUCED-KNOWN (validates a published advisory) | 2 |
 | CONFIRMED-NOVEL (new, confirmed) | 0 |
-| CANDIDATE-UNCONFIRMED (framework-surfaced, not independently confirmed) | 0 |
-| VERIFIED-SECURE (control tested, held) | 5 |
+| CANDIDATE-UNCONFIRMED (framework-surfaced, not independently confirmed) | 1 |
+| VERIFIED-SECURE (control tested, held) | 10 |
 
 **Top risks, in business terms:**
 
@@ -42,6 +42,23 @@ See [`docs/coverage-matrix.md`](../docs/coverage-matrix.md) for the full 7-scope
 
 ## 4. Findings
 
+### [WM-012] Software composition analysis — real npm-audit + lockfile-ancestry tracing finds 4 advisories reachable only through the bundled auth SDK's dependency tree, not confirmed on an executed code path
+
+- **Status:** `CANDIDATE-UNCONFIRMED`
+- **Severity (CVSS 3.1):** High (7.5) — `CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H`
+- **Severity (CVSS 4.0):** `CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N`
+- **CWE:** CWE-835, CWE-1104 · **WSTG:** WSTG-CONF-09 · **OWASP:** API9:2023
+- **Component:** package-lock.json (1795 resolved dependencies, real target lockfile) — the real @clerk/clerk-js -> @solana/wallet-adapter-* -> image-size/stream-json/uuid transitive chain · **Trust boundary:** 4
+- **Lab commit:** `c7859c70e529db67cb871d2199f0e24d728679c1`
+
+**Description.** `npm audit --json` against the real, live-cloned lockfile (works without a full `npm install`) found 8 unique root advisories across 28 flagged packages (0 critical, 10 high, 18 moderate). Rather than stop at npm audit's flat severity labels, this finding traces each advisory's real ancestry through the lockfile's own dependency graph and greps the actual, real, non-test/non-generated source (`api/`, `server/`, `src/`) for whether the nearest real top-level dependency is genuinely imported by live request-handling code. 4 advisories (`image-size` x2 HIGH DoS via JXL/HEIF/ICNS parsers, `stream-json` MODERATE DoS, `uuid` MODERATE buffer-bounds) trace back to `@clerk/clerk-js` — the app's actual, confirmed-live auth SDK (see findings/WM-008) — via its Solana wallet-adapter dependency tree. This PROVES the top-level package (`@clerk/clerk-js`) is genuinely imported by live code; it does NOT prove the specific vulnerable function inside `image-size`/`stream-json`/`uuid` is ever actually executed by this application's runtime — that would require deeper call-graph analysis this pass did not attempt. 2 more advisories (`ip-address` x2, both genuinely about SSRF/trust-boundary classification bugs) trace through `telegram` -> `socks` -> `ip-address`, and `telegram` is confirmed imported ONLY by `scripts/telegram/session-auth.mjs` (an operational script, not the live request path) — narrower risk, reported separately. The remaining 2 (`@vitest/mocker`/`vitest`, `undici`) are dev-tooling / ambiguous-usage, not confirmed live either.
+
+**Business impact.** Unconfirmed pending deeper triage — reported honestly as CANDIDATE-UNCONFIRMED rather than inflated to a confirmed finding or dismissed. IF the image-size/stream-json/uuid vulnerable code paths are genuinely reachable (e.g. if Clerk's wallet-adapter integration ever parses a user-controlled image or JSON blob through these libraries), the practical impact is denial-of-service (event-loop-blocking infinite loops / O(depth²) parsing) on whatever request path triggers it — moderate business impact, not data exposure. The two ip-address SSRF-classification advisories are lower urgency: confirmed reachable only through an internal ops script (Telegram session setup), not exposed to any untrusted external request.
+
+**Remediation.** Standard dependency remediation: `npm audit fix` resolves most of these via existing patched versions (image-size, stream-json, uuid all have `fixAvailable` per npm audit's own output — the fix path routes through updating @clerk/clerk-js or exceljs to versions that pull patched transitive deps). A concrete, real, verified example is provided: findings/WM-012/remediation.patch bumps the direct `undici` dependency from the pinned 7.29.0 to the patched 7.30.0 (closes GHSA-3wwx-pv8p-q78v, the WebSocket permessage-deflate DoS) — this patch was generated against and verified to apply cleanly with `git apply --check` against the real pinned source, not hand-typed. Before treating the image-size/stream-json/uuid class as urgent, a maintainer with access to Clerk's actual bundled wallet-adapter code should confirm whether their vulnerable functions are ever called at runtime, or are dead code pulled in only for TypeScript types/unused code paths bundlers tree-shake away — that confirmation is exactly what turns this CANDIDATE-UNCONFIRMED into either a real finding or a verified-secure dead-code dismissal.
+
+**Full write-up + evidence:** [`findings/WM-012/finding.md`](../findings/WM-012/finding.md)
+
 ### [WM-002] Reserve-then-refund quota logic allows unlimited billable calls after a single reservation (Denial-of-Wallet)
 
 - **Status:** `REPRODUCED-KNOWN` — validates [`GHSA-hcq5-jm84-2395`](https://github.com/koala73/worldmonitor/security/advisories/GHSA-hcq5-jm84-2395)
@@ -55,7 +72,7 @@ See [`docs/coverage-matrix.md`](../docs/coverage-matrix.md) for the full 7-scope
 
 **Business impact.** This is the app's signature risk class: the server exists to proxy ~40+ paid third-party APIs, and the target's own .env.example defines explicit spend-budget knobs (e.g. AVIATIONSTACK_MONTHLY_BUDGET) precisely because the owner already fears exactly this. Our reproduction drove 10 attack calls against the vulnerable variant for a NET COST TO THE ATTACKER OF ZERO quota, while the (mock) upstream recorded 10 real billable calls — i.e. more than 3x the intended daily budget with no attacker-side signal that anything was wrong. Against a real metered vendor this is a direct, unbounded, and — critically — INVISIBLE-TO-THE-VICTIM'S-OWN-QUOTA-DASHBOARD financial drain.
 
-**Remediation.** Make the reservation irrevocable the instant the billable call is dispatched — no code path after dispatch may increment the quota back up, regardless of the response content. A refund may only be issued for a pre-flight validation failure that happens BEFORE the upstream call is dispatched (i.e. before any money is spent). Demonstrated in lab/repro-services/dow-mock/patched.mjs, which caps billable upstream calls at exactly the daily budget regardless of attack volume against the identical attack.
+**Remediation.** Make the reservation irrevocable the instant the billable call is dispatched — no code path after dispatch may increment the quota back up, regardless of the response content. A refund may only be issued for a pre-flight validation failure that happens BEFORE the upstream call is dispatched (i.e. before any money is spent). Demonstrated in lab/repro-services/dow-mock/patched.mjs, which caps billable upstream calls at exactly the daily budget regardless of attack volume against the identical attack. remediation.patch expresses this as a real diff (not prose) between our own vulnerable and patched variants — note this is NOT a patch against the real target's source (which is already fixed, per the published advisory; we hold no vulnerable copy of their real code to patch), it is the concrete code-level fix pattern, generated with git diff --no-index between two files we wrote and both actually run.
 
 **Full write-up + evidence:** [`findings/WM-002/finding.md`](../findings/WM-002/finding.md)
 
@@ -112,6 +129,36 @@ A report that is all criticals on a hardened app is distrusted. These controls w
 - **Control tested:** Full content dump (not just key-name inspection) of all 27 real localStorage keys plus sessionStorage and cookies from the actual running app, each VALUE pattern-scanned for JWT shape, the target's own 'wm_<hex>' API-key format (seen in api/a2a.ts's own documentation), Bearer tokens, and generic secret/password/token assignment patterns.
 - **Component:** Real running instance (localhost:3000), browser localStorage/sessionStorage/cookies
 - **Full write-up + evidence:** [`findings/WM-007/finding.md`](../findings/WM-007/finding.md)
+
+### [WM-008] Authentication & session management — JWT alg pinning, OAuth state atomicity, and session cookie attributes independently verified
+
+- **Control tested:** Three independent, targeted static checks, each against a documented real attack class: (1) every jose jwtVerify() call site pins an explicit, non-empty algorithms array excluding 'none' (closes the classic alg-confusion/none-algorithm JWT bypass, CWE-347); (2) OAuth callback state consumption uses an atomic Redis GETDEL rather than a check-then-delete pair (closes exactly the TOCTOU class the target's own GHSA-9m4c-824h-m4xw was); (3) every real session cookie-value construction found in source includes Secure + SameSite, and HttpOnly unless it is an explicit non-session clear-cookie.
+- **Component:** server/auth-session.ts (jose jwtVerify), api/discord+slack/oauth/callback.ts (state consumption), api/wm-session.js (session cookie issuance) — real target source
+- **Full write-up + evidence:** [`findings/WM-008/finding.md`](../findings/WM-008/finding.md)
+
+### [WM-009] Premium-fetch authorization wrapper — real AST-based re-derivation (v1's explicitly deferred check) — all 9 real client call sites correctly gated
+
+- **Control tested:** Real AST parsing (not regex) of every non-generated source file to find every `new <X>ServiceClient(...)` construction, trace every method call made on that bound instance within the same file, cross-reference each called method against the real premium-path registry (via the same generated-client method->path extraction the target's own enforcement script uses), and verify the constructing options object's `fetch:` property is the literal `premiumFetch` identifier or the one documented delegating adapter (`proFreshRpcFetch`) whenever a premium method is actually called.
+- **Component:** src/ (791 real, non-generated .ts/.tsx files) vs. src/generated/client/*/service_client.ts + src/shared/premium-paths.ts — real target source, parsed with the actual TypeScript Compiler API
+- **Full write-up + evidence:** [`findings/WM-009/finding.md`](../findings/WM-009/finding.md)
+
+### [WM-010] Generated API runtime validation (GHSA-cmj5 class) — central wiring confirmed, and both documented exceptions have real enforced compensating controls
+
+- **Control tested:** (1) Confirms the central gateway (server/gateway.ts) actually wires a real validateRequest implementation into the generated Sebuf servers — the exact thing GHSA-cmj5-cfhr-w964 ('Generated API runtime validation is disabled') was about. (2) Enumerates every handler that explicitly documents itself as an exception to that gateway-level validation, and verifies each one's claimed compensating bound (a MAX_*_LEN constant) is not just declared but actually passed into a real validation call in the same file.
+- **Component:** server/gateway.ts + server/worldmonitor/intelligence/v1/{search-intel-history,get-similar-events}.ts — real target source
+- **Full write-up + evidence:** [`findings/WM-010/finding.md`](../findings/WM-010/finding.md)
+
+### [WM-011] Idempotency-key handling — body-hash mismatch rejection, concurrent-conflict detection, and fail-closed scope validation all confirmed
+
+- **Control tested:** Three checks against the real idempotency-key implementation, complementing WM-002/WM-003 (rate-limiting/DoW) with the other half of this PS scope area the PS itself names: (1) reusing an Idempotency-Key with a different request body is rejected with 422, not silently replayed; (2) a second request arriving while the first with the same key is still processing gets a 409 with Retry-After, not a race; (3) a missing/empty idempotency scope hard-fails with 500 rather than silently disabling duplicate-write protection.
+- **Component:** api/_idempotency.js (283 lines, real target source)
+- **Full write-up + evidence:** [`findings/WM-011/finding.md`](../findings/WM-011/finding.md)
+
+### [WM-013] Client-bundle secret exposure (VITE_-prefixed env vars) — independently re-derived with a deliberately broader pattern, 0 real hits
+
+- **Control tested:** Independent re-derivation of the class scripts/check-vite-env-secrets.mjs guards against (any VITE_-prefixed name — which Vite inlines into the client bundle for every browser to see — that looks secret-shaped), using both the target's own narrow, prefixed-form pattern AND a deliberately broader bare-word pattern for an independent second opinion, across every git-tracked .env* file and every real import.meta.env.VITE_* reference in src/.
+- **Component:** .env.example + every real import.meta.env.VITE_* usage in src/ (real target source)
+- **Full write-up + evidence:** [`findings/WM-013/finding.md`](../findings/WM-013/finding.md)
 
 
 ---

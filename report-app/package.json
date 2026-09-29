@@ -1,0 +1,21 @@
+{
+  "name": "worldmonitor-assessment-report",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Interactive assessment report — build-map-advanced ticket #F1. A real React app (not a single static HTML file, per explicit request), reading its data from a JSON file generated FROM the real findings/*.json + register/advisories.json — never hand-typed. Kept as an isolated sub-project (own package.json) so the core zero-dependency assessment engine is untouched.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "marked": "^18.0.14",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.7"
+  }
+}

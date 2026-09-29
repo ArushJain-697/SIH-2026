@@ -22,6 +22,7 @@ const STEPS = [
   { name: 'unit tests (EPSS client)', cmd: 'node', args: ['--test', 'tests/epss.test.mjs'] },
   { name: 'unit tests (priority engine)', cmd: 'node', args: ['--test', 'tests/priority.test.mjs'] },
   { name: 'endpoint inventory (structural)', cmd: 'node', args: ['--test', 'tests/endpoints_inventory.test.mjs'] },
+  { name: 'Phase C scanners (structural)', cmd: 'node', args: ['--test', 'tests/phase_c_scanners.test.mjs'] },
   { name: 'landmine scan', cmd: 'node', args: ['tests/scan_landmines.mjs'] },
   { name: 'finding schema validation', cmd: 'node', args: ['tests/validate_findings.mjs'] },
   { name: 'advisory-aware regression harness', cmd: 'node', args: ['framework/regression-harness/run.mjs'] },

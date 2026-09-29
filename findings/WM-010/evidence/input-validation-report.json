@@ -1,0 +1,47 @@
+{
+  "tool": "input-validation-scanner",
+  "scope_area": 3,
+  "target_commit": "c7859c70e529db67cb871d2199f0e24d728679c1",
+  "checked_at": "2026-09-29T05:23:00.927Z",
+  "checks": {
+    "gateway_validation": {
+      "check": "gateway_wires_validate_request",
+      "file": "server/gateway.ts",
+      "found": true,
+      "verdict": "VERIFIED-SECURE"
+    },
+    "documented_exceptions": {
+      "check": "documented_validation_exceptions_have_compensating_controls",
+      "exceptions_found": 2,
+      "exceptions_without_compensating_control": 0,
+      "exceptions": [
+        {
+          "file": "server/worldmonitor/intelligence/v1/get-similar-events.ts",
+          "bounds_declared": [
+            "MAX_LIMIT=32",
+            "MAX_SITUATION_LEN=1000"
+          ],
+          "bounds_actually_used": [
+            "MAX_LIMIT",
+            "MAX_SITUATION_LEN"
+          ],
+          "compensating_control_present": true
+        },
+        {
+          "file": "server/worldmonitor/intelligence/v1/search-intel-history.ts",
+          "bounds_declared": [
+            "MAX_LIMIT=64",
+            "MAX_QUERY_LEN=500"
+          ],
+          "bounds_actually_used": [
+            "MAX_LIMIT",
+            "MAX_QUERY_LEN"
+          ],
+          "compensating_control_present": true
+        }
+      ],
+      "verdict": "VERIFIED-SECURE"
+    }
+  },
+  "overall_verdict": "VERIFIED-SECURE"
+}
