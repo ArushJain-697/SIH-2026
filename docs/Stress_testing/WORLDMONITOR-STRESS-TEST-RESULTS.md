@@ -8,7 +8,7 @@ Companion to `WORLDMONITOR-STRESS-TEST-BUILDMAP.md`. The buildmap holds the plan
 - Status labels follow `framework/schema/finding-rules.mjs`: `VERIFIED-SECURE`, `REPRODUCED-KNOWN`, `CANDIDATE-UNCONFIRMED`, `CONFIRMED-NOVEL`. A code-read hardening gap that is not exploitable on its own is labelled `HARDENING-OBSERVATION` here; decide at write-up time whether to promote it.
 - "Source" means the file and line range, so every claim can be re-checked.
 
-**Scoreboard so far (2026-10-01):** 13 of 13 Phase A tasks attempted. Phase B: B1 and B2 complete, both `CONFIRMED-NOVEL` findings with measured numbers from the real, unmodified target code. 2 new findings. 0 vulnerabilities in A. 8 controls re-confirmed in A. 7 hardening observations in A. 4 premises from the Gemini reports shown wrong or not applicable. 8 leads queued; L1 and L2 now answered by B2 and B1 respectively.
+**Scoreboard so far (2026-10-01):** 13 of 13 Phase A tasks attempted. Phase B: B1, B2, B3 complete. B1 and B2 are `CONFIRMED-NOVEL` findings with measured numbers from the real, unmodified target code; B3 is `VERIFIED-SECURE` (the free-tier widget sanitizer held against 9 real-browser payloads). 2 new findings, 1 control re-confirmed in B. 0 vulnerabilities in A. 8 controls re-confirmed in A. 7 hardening observations in A. 5 premises from the Gemini reports shown wrong or not applicable (adds the `wsRelayUrl` clobbering target, which is not a global). 8 leads queued; L1 and L2 now answered by B2 and B1 respectively.
 
 ---
 
@@ -244,6 +244,36 @@ The ~100x time growth for each 10x size growth is the signature of **O(n²) beha
 **What was not tested (stated honestly):** whether a live Vercel isolate actually serves *other unrelated* requests from the same warm instance during this stall (that depends on Vercel's per-isolate concurrency model and needs a deployed instance, out of scope for a local, in-process harness); and the exact byte size at which this would exceed Vercel's hard function-execution ceiling (extrapolating the O(n²) fit, crossing 8 seconds happens around 60,000 openers / ~900 KB — well within what a normal-looking RSS response could be — but this is a projection from the quadratic fit, not a separately measured data point).
 
 **Status for the plan:** B2 is answered, confirms and sharpens L1 with real numbers instead of a hypothesis. The entity-expansion framing from the original Gemini report (fast-xml-parser) was already ruled out by A2; this result replaces it with the correct mechanism and a concrete, reproducible payload.
+
+## B3. mXSS / DOM-clobbering against the real widget sanitizer — `VERIFIED-SECURE`
+
+**Finding: the free-tier custom-widget sanitizer (`src/utils/widget-sanitizer.ts`, used by `CustomWidgetPanel.ts` for `this.spec.html`) held against every payload tested, including a methodology trap my own first pass fell into — reported here so the result is trustworthy, not just asserted.**
+
+**Target and why it's the right one:** the original Gemini-report hypothesis named `safeHtml()` (`src/utils/sanitize.ts`), but that function is a template-literal auto-escaper, not an HTML-tree sanitizer — it cannot parse or mutate markup, so classic mutation-XSS (mXSS) doesn't apply to it. Reading `unsafeRawHtml(` call sites across `src/components/` found the actual HTML-tree sanitizer: `sanitizeWidgetHtml()`, wrapping `DOMPurify.sanitize()` with a strict allowlist (`ALLOWED_TAGS` has 29 entries, no `a`, `img`, `style`, or any form element; `FORBID_TAGS` explicitly lists `button, input, form, select, textarea, script, iframe, object, embed`), plus a custom hook stripping any `style` attribute matching `url(|expression(|javascript:|@import|behavior:`. This is the one case in the codebase where genuinely arbitrary (AI-generated) HTML reaches `innerHTML` in the **main page context** (`CustomWidgetPanel.ts`'s free-tier path) — the highest-value place to test mXSS.
+
+**Methodology — a correction made mid-task, stated honestly:** I first ran these payloads through `happy-dom` (the project's own DOM-test engine for `tests/dom/`, per `vitest.dom.config.mts`), importing the real `sanitizeWidgetHtml()` from the pinned commit. That pass produced three results that looked like critical bypasses: the mXSS `<math><mi><style><img onerror>` nesting trick appeared to survive, the `FORBID_TAGS` list appeared to be entirely ignored (`<form><input autofocus><button>` passed through untouched, attributes and all), and a `<a id="CONFIG">` clobbering vector appeared to survive. Before reporting any of that, I cross-checked it in the **Claude Code built-in browser** — a real Chromium engine — serving a static page over local HTTP that loads the exact same `dompurify@3.4.16` (the installed lockfile version) with the exact same config copied verbatim from the repo. **All three apparent bypasses did not reproduce in the real browser.** `happy-dom` was independently confirmed broken for this purpose: a direct sanity check (`DOMPurify.sanitize('<form><input autofocus></form><button>z</button>', { FORBID_TAGS: ['button','input','form'] })`, no app code involved) also failed to strip the forbidden tags under `happy-dom`, proving the gap is in the test engine, not DOMPurify or the app. This is exactly the kind of cross-check the plan calls for, and it means the actual finding is the opposite of my first-pass result.
+
+**Real-browser results (9 payloads, `dompurify@3.4.16`, the app's exact `PURIFY_CONFIG`):**
+
+| Payload | What it tests | Real-browser output |
+|---|---|---|
+| `<math><mi><a><style><img onerror>` | Classic mXSS namespace-reparse trick | `""` — fully stripped |
+| `<img src=x onerror=...>` | Baseline: is `img` ever let through | `""` — fully stripped |
+| `<form><input autofocus onfocus=...></form><button onclick=...>` | `FORBID_TAGS` enforcement | `"x"` — tags and handlers gone, only inner text survives |
+| `<a id="wsRelayUrl">x</a><a id="CONFIG">y</a>` | DOM clobbering via named anchors | `"xy"` — both anchors stripped (`a` is not in `ALLOWED_TAGS`) |
+| `<div style="url(javascript:...)">` | Custom style-attribute denylist | `<div>x</div>` — style attribute removed, tag kept (hook working as designed) |
+| `<div style="url/**/(javascript:...)">` | CSS-comment bypass of the denylist regex | `<div>x</div>` — still stripped (DOMPurify's own built-in CSS handling caught what the naive regex alone would have missed — a real defense-in-depth finding) |
+| `<div style="ur\6cl(javascript:...)">` | CSS backslash-escape bypass | `<div>x</div>` — stripped |
+| `<svg><style>@import 'javascript:...'</style></svg>` | SVG/CSS `@import` smuggling | `<svg></svg>` — `style` element not allowlisted, removed |
+| `<svg><animate onbegin=...>` | SVG declarative-animation event handler | `<svg></svg>` — `animate` not allowlisted, removed |
+
+**On the clobbering target named in the original Gemini report:** `wsRelayUrl` is not a global at all — it is a module-local `const` in `src/services/military-flights.ts` built from `import.meta.env.VITE_WS_RELAY_URL`, never attached to `window`. It was never a real DOM-clobbering target; this corrects that part of the report's premise, similar to A1/A2's corrections.
+
+**Secondary surface checked by code read (not live-tested, design review only):** the Pro-tier widget path (`wrapProWidgetHtml` → sandboxed iframe at `public/wm-widget-sandbox.html`) does not sanitize at all — by design, since it deliberately runs widget-authored `<script>` for charting (CSP allows `'unsafe-inline'` + a pinned `cdn.jsdelivr.net` for Chart.js). Its security boundary is the sandbox, not content filtering: `sandbox="allow-scripts"` with no `allow-same-origin` (opaque origin, no cookie/session access), a strict parent-origin allowlist keyed off `window.location.hostname` rather than the spoofable `document.referrer` for the localhost case, single-use id/token-gated `postMessage` delivery, and a `beforeunload`-handler lockout that specifically defends against a known iframe-widget UI-redress trick. This reads as a deliberately engineered, defense-in-depth design, consistent with the maintainer having already hardened a closely related trust boundary (the IPC/sidecar finding credited to Cody Richard in A1's AGENTS.md read). Recommend a live B-task if time allows (postMessage origin/token replay under a forged `document.referrer`), but it was not run here.
+
+**Impact if the free-tier sanitizer had failed:** `CustomWidgetPanel.ts` renders `this.spec.html` directly into the dashboard's main document — any successful bypass would have had full access to the viewer's session (cookies, Clerk auth state, every other panel's data). It did not fail under any payload tested.
+
+**Status for the plan:** B3 is answered — `VERIFIED-SECURE`, not a finding. Reported at this length because the negative result required catching and correcting a false-positive from the first test engine, which is itself evidence the testing was rigorous rather than a rubber-stamp pass.
 
 ## What is left
 
