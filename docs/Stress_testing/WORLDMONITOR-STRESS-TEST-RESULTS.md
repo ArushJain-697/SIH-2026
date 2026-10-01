@@ -8,7 +8,7 @@ Companion to `WORLDMONITOR-STRESS-TEST-BUILDMAP.md`. The buildmap holds the plan
 - Status labels follow `framework/schema/finding-rules.mjs`: `VERIFIED-SECURE`, `REPRODUCED-KNOWN`, `CANDIDATE-UNCONFIRMED`, `CONFIRMED-NOVEL`. A code-read hardening gap that is not exploitable on its own is labelled `HARDENING-OBSERVATION` here; decide at write-up time whether to promote it.
 - "Source" means the file and line range, so every claim can be re-checked.
 
-**Scoreboard so far (2026-10-01):** 13 of 13 Phase A tasks attempted. Phase B: B1, B2, B3, B4, B5, B6, B9, B12 complete (B12 includes an escalation into the production alerting relay). B1, B2, B9 and B12 are `CONFIRMED-NOVEL` findings with measured/demonstrated evidence from the real, unmodified target code; B3, B4, B5 and B6 are `VERIFIED-SECURE`. **4 new findings**, 5 controls re-confirmed in B (adds B6: no JWT/audience surface exists on the MCP bearer path at all, confirmed live with a positive control). 0 vulnerabilities in A. 8 controls re-confirmed in A. 8 hardening observations total. 6 premises from the Gemini reports shown wrong or not applicable. L1, L2 and L6 answered. **B12's escalation is the strongest single finding of the whole exercise: the same unsanitized-prompt gap, found twice by differential analysis, with the second instance reaching real Slack/Discord/push notifications delivered to actual subscribers — both a false-alert and a silent-suppression vector against the product's core promise.**
+**Scoreboard so far (2026-10-01):** 13 of 13 Phase A tasks attempted. Phase B: B1, B2, B3, B4, B5, B6, B7, B9, B12 complete (B12 includes an escalation into the production alerting relay). B1, B2, B9 and B12 are `CONFIRMED-NOVEL` findings with measured/demonstrated evidence from the real, unmodified target code; B3, B4, B5, B6 and B7 are `VERIFIED-SECURE`. **4 new findings**, 6 controls re-confirmed in B (adds B7: the RFC 9207 issuer mechanism's emission point, fuzz-tested live with 11 adversarial Host headers, 0 bypasses). 0 vulnerabilities in A. 8 controls re-confirmed in A. 8 hardening observations total. 6 premises from the Gemini reports shown wrong or not applicable. L1, L2 and L6 answered. **B12's escalation is the strongest single finding of the whole exercise: the same unsanitized-prompt gap, found twice by differential analysis, with the second instance reaching real Slack/Discord/push notifications delivered to actual subscribers — both a false-alert and a silent-suppression vector against the product's core promise.**
 
 ---
 
@@ -426,12 +426,32 @@ The three negative cases returning **identical** responses regardless of whether
 
 **Status:** B6 answered. Premise refuted for this architecture, same pattern as A11/B9's MCP half — the hypothesized mechanism doesn't exist, confirmed by live, demonstrated, differential testing (one correct-looking input, one wrong, one guess, one genuine positive control — all behaving exactly as the opaque-token design predicts).
 
+## B7. MCP — issuer validation on OAuth callback — `VERIFIED-SECURE` (premise reframed, then demonstrated)
+
+**Finding: the client never submits `iss` at all — WorldMonitor is the authorization server and emits it (RFC 9207), so the real question is whether that emission can be spoofed. Tested 11 adversarial Host headers against the live, unmodified issuer-resolution function: 0 bypassed.**
+
+**Why the task's literal scenario needed reframing, read from the code:** the task assumes a client-submitted `iss` that the server validates on callback completion. That model fits a client consuming an external IdP's response. WorldMonitor is not that — it **is** the authorization server for MCP clients (Claude, ChatGPT, etc. connecting to `/oauth/authorize`), so under RFC 9207 it is the party that *adds* `iss` to its own redirect, for the client's benefit. Confirmed directly in `api/oauth/authorize.js`'s completion handler: `const { client_id, redirect_uri, code_challenge, state, iss } = nonceData;` — every one of these, **including `iss`**, is read exclusively from a server-stored Redis record (`oauth:nonce:<nonce>`) captured at the start of the flow, never from the completion request itself. There is no request field here for a client to submit a wrong `iss` into, because the server never looks at one.
+
+**So the real, testable question becomes: can the *initial* capture of `iss` be spoofed?** `resolveAuthorizationIssuer(req)` derives `iss` from the request's `Host` header, gated by an anchored regex: `^https:\/\/(?:[a-z0-9-]+\.)?worldmonitor\.app$` — with the code's own comment noting this is "defense-in-depth" (something upstream, presumably platform/edge routing, is the primary protection) and explicitly calling out that it must reject `worldmonitor.app.evil.example`, `evilworldmonitor.app`, and any `:port` suffix.
+
+**Demonstrated against the real, unmodified function** — 11 adversarial `Host` header values plus 2 genuine ones:
+
+| Host header sent | Resulting `iss` |
+|---|---|
+| `worldmonitor.app.evil.example`, `evilworldmonitor.app`, `worldmonitor.app@evil.example`, `worldmonitor.app:8080`, a punycode lookalike, an uppercase suffix variant, `127.0.0.1`, `localhost`, `attacker.com`, empty string, a percent-encoded space/dot trick | **All 11 fell back to the safe canonical `https://worldmonitor.app`** — 0% bypass |
+| `worldmonitor.app` (genuine apex) | `https://worldmonitor.app` — correct, unchanged |
+| `tech.worldmonitor.app` (genuine first-party subdomain) | `https://tech.worldmonitor.app` — correct, unchanged |
+
+One adversarial case (a literal newline in the Host value, simulating a header-injection attempt) couldn't even be constructed as a test — the JavaScript `Headers` API itself threw `TypeError: ... is an invalid header value` before the app code ever ran, which is itself a relevant platform-level control worth noting, if not an app-specific one.
+
+**Status: `VERIFIED-SECURE`.** The RFC 9207 mechanism holds at both ends: the emission point is a tightly-anchored allowlist regex with a safe fallback (confirmed live, 0/11 bypasses), and the consumption point at flow-completion is immune to request-supplied overrides by construction (reads exclusively from server state, confirmed by direct code citation). This mirrors B6's finding: the specific attack class the task describes doesn't have a foothold in this architecture, and the closest real analog was tested and held.
+
 ## What is left
 
 - **Phase A:** nothing unfinished except two items that cannot be done by code reading: A13 (a real Scorecard number needs the CLI and a GitHub token) and the render check in A9 residual 2 (needs a running UI).
-- **Phase B: 8 of 16 done — B1, B2, B3, B4, B5, B6, B9, B12.** 4 novel findings (B1, B2, B9, B12 — B12 includes the production-relay escalation), 4 secure confirmations (B3, B4, B5, B6).
-- **Phase B not started: B7, B8, B10, B11, B13, B14, B15, B16** (8 tasks).
-  - B7 (issuer validation on OAuth callback) and B8 (legacy session binding) are the natural next step — same harness pattern (real `api/mcp.ts`/`api/oauth/*` handlers, local Redis + the wire-format adapter built for B6, which is reusable for any `_oauth-token.js` test).
+- **Phase B: 9 of 16 done — B1, B2, B3, B4, B5, B6, B7, B9, B12.** 4 novel findings (B1, B2, B9, B12 — B12 includes the production-relay escalation), 5 secure confirmations (B3, B4, B5, B6, B7).
+- **Phase B not started: B8, B10, B11, B13, B14, B15, B16** (7 tasks).
+  - B8 (legacy session binding) is the natural next step — same harness pattern (real `api/mcp.ts` handler, local Redis + the wire-format adapter built for B6, reusable for any `_oauth-token.js`/session test).
   - B10 (SSRF/redirect/DNS-rebinding against the RSS proxy and `api/mcp-proxy.ts`) doubles as leads L3/L4.
   - B11 (Agent Skills path traversal) is a quick, sharp test against `skills/get` now that B9 already mapped that code path.
   - B13 (resource exhaustion sweep) explicitly depends on B1's lab setup, which already exists.
