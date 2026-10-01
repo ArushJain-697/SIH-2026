@@ -8,7 +8,7 @@ Companion to `WORLDMONITOR-STRESS-TEST-BUILDMAP.md`. The buildmap holds the plan
 - Status labels follow `framework/schema/finding-rules.mjs`: `VERIFIED-SECURE`, `REPRODUCED-KNOWN`, `CANDIDATE-UNCONFIRMED`, `CONFIRMED-NOVEL`. A code-read hardening gap that is not exploitable on its own is labelled `HARDENING-OBSERVATION` here; decide at write-up time whether to promote it.
 - "Source" means the file and line range, so every claim can be re-checked.
 
-**Scoreboard so far (2026-10-01):** 13 of 13 Phase A tasks attempted, Phase B started (B1 complete). 1 new finding (B1, novel). 0 vulnerabilities in A. 8 controls re-confirmed in A (A1, A2, A3, A5, A6, A7, A9, A12). 7 hardening observations in A, plus B1's own. 4 premises from the Gemini reports shown wrong or not applicable. 8 leads queued (L2 now partly answered by B1).
+**Scoreboard so far (2026-10-01):** 13 of 13 Phase A tasks attempted. Phase B: B1 and B2 complete, both `CONFIRMED-NOVEL` findings with measured numbers from the real, unmodified target code. 2 new findings. 0 vulnerabilities in A. 8 controls re-confirmed in A. 7 hardening observations in A. 4 premises from the Gemini reports shown wrong or not applicable. 8 leads queued; L1 and L2 now answered by B2 and B1 respectively.
 
 ---
 
@@ -203,6 +203,47 @@ Companion to `WORLDMONITOR-STRESS-TEST-BUILDMAP.md`. The buildmap holds the plan
 **What was not tested (stated honestly):** the actual Vercel Edge Function concurrency ceiling and whether 504s cascade platform-wide — that needs a Vercel account and real traffic, out of scope for a local lab. The claim above is "serverless execution time per request multiplies 280x-330x (15ms → 4.3-5s) under this specific failure shape," not "this causes an outage," which would need the platform-level test.
 
 **Status for the plan:** B1 is answered and sharper than its original hypothesis. Recommend folding L2 into this entry (closed as answered) and keeping L5 (translate-mode cost ceiling) as the next thing to measure, since it is the one endpoint-covered, LLM-backed route and the in-flight coalescing note above only partially answers it.
+
+## B2. Malformed/hostile RSS body against the real feed parser — `CONFIRMED-NOVEL`
+
+**Finding: a single hostile feed response containing ~1.5 MB of unclosed `<item>` openers makes the real `parseRssXml` function take 23.5 seconds on one synchronous call — and because Node is single-threaded, that call blocks the whole serverless isolate, not just that one feed.**
+
+**Method (more rigorous than a black-box fetch test, and why):** `parseRssXml` is not reachable over the network in isolation — it only runs after a feed URL is fetched. Rather than standing up a mock HTTP feed server and going through the full fetch/cache/dedup/classification pipeline (which would mix network-timing noise into a CPU-cost measurement), I imported the **exact, unmodified function from the pinned commit** directly: `list-feed-digest.ts` exports it through its own `__testing__` surface (`export const __testing__ = { ..., parseRssXml, ... }`, line 3408) — a seam the maintainers built for their own tests, not something I added. I called it with crafted strings in-process, timed with `performance.now()`, no network, no mutation of the module, no mock server needed for this one. This isolates the parser's own algorithmic cost from fetch latency, which is the right isolation for a CPU-exhaustion question.
+
+**Control (well-formed feeds, confirms no cost regression from legitimate size):**
+
+| Payload | Size | Time | Items parsed |
+|---|---|---|---|
+| Well-formed, 50 items | 7.4 KB | 0.1 ms (sub-measurement) | 5 (capped by `ITEMS_PER_FEED`) |
+| Well-formed, 5,000 items | 742 KB | 0.83 ms | 5 |
+| Well-formed, 50,000 items | 7.57 MB | 6.28 ms | 5 |
+
+Legitimate feeds, even unrealistically large ones, parse in single-digit milliseconds. The cap at 5 parsed items (`ITEMS_PER_FEED = 5`, line 171) does not reduce the *scanning* cost — the regex must still walk the whole string via `matchAll` to even find the items — but it does mean the cost below is not about scanning too many real items.
+
+**Hostile payload — unclosed `<item>` openers, no closing tag anywhere (the itemRegex can never match, so it must try and fail at every opener):**
+
+| Openers | Size | Time | Growth vs prior row |
+|---|---|---|---|
+| 1,000 | 15 KB | 2.2 ms | — |
+| 10,000 | 150 KB | 217.7 ms | 10x input → ~99x time |
+| 100,000 | 1.5 MB | **23,507.9 ms (23.5 s)** | 10x input → ~108x time |
+
+The ~100x time growth for each 10x size growth is the signature of **O(n²) behaviour**, not O(n). Two other hostile shapes were tested and found **not** to reproduce this — stated honestly so the finding is precise about which shape triggers it:
+- A single huge *unclosed* item with no further `<item>` tags at all (up to 10 MB of filler): 0.07-6.98 ms — fast, because there is only one failed match attempt, not N of them.
+- Many `<item>` openers followed eventually by one real `</item>` (up to 50,000 openers, 300 KB): 0.15-1.09 ms — fast, because the lazy quantifier finds a match on its first attempt and the global regex's `lastIndex` jumps past the entire consumed block, so there is only one scan, not N.
+- Many fake `<![CDATA[` openers inside one real item's description (up to 100,000 repetitions, 900 KB): 0.03-1.88 ms — fast; `extractRawTagBody`'s regex runs once per block, not per fake opener.
+
+**Root cause:** `itemRegex = /<item[\s>]([\s\S]*?)<\/item>/gi` (line 1069) is applied with `matchAll`. When an opener has no matching closer anywhere ahead of it, the lazy `[\s\S]*?` must expand one character at a time all the way to end-of-string before the match attempt at that position can fail. With N openers and no closers, this O(remaining-length) failed scan happens **separately at each of the N starting positions**, giving O(N²) total work. This is a real, measurable algorithmic-complexity weakness in the regex-based parser that A2 already predicted would exist once fast-xml-parser was ruled out as the live code path (this answers lead L1).
+
+**Reachability, stated honestly — this is narrower than an anonymous DoS:** the feed URL list (`server/worldmonitor/news/v1/_feeds.ts`, 786 lines) is a **static, operator-curated list** of named publishers and Google News search URLs — not user-submittable. So triggering this needs one of: a compromised or malicious response from an already-trusted feed source, a MITM/DNS substitution on one of those fetches (`fetch(url, ...)` in `fetchRssText`, line 803, is plain HTTPS with no certificate pinning beyond what the platform TLS stack gives), or an operator adding a bad feed by mistake. It is **not** "anyone on the internet can POST this." That honesty matters for how this is framed on a slide.
+
+**Blast radius — why this is worse than "one feed fails slowly":** `fetchRssText` wraps only the *network fetch* in a timeout (`createTimeoutLinkedController`, `FEED_TIMEOUT_MS = 8_000`, line 174) — once `resp.text()` resolves, `parseRssXml` runs as a **synchronous**, non-yielding call. Node.js is single-threaded, so a 23.5-second synchronous call blocks the entire isolate: every other feed in the same digest batch (`BATCH_CONCURRENCY = 20`, line 183 — up to 20 feeds are "concurrent" only in their network fetch, not their parse), and in principle any other request landing on that same warm isolate, stalls until the parse returns. This comfortably exceeds the digest's own `DIGEST_RESPONSE_TIMEOUT_MS = 14_000` (line 178) — so the fetch-level timeout that was clearly designed to bound this pipeline's worst case does not actually bound it, because the expensive part happens after the timeout's own window.
+
+**Impact if exploited:** one bad response from one trusted feed, one time, does not just fail that feed gracefully (which the timeout/fallback machinery elsewhere in this file is clearly built to handle) — it can hang the whole digest-building request past its own deadline and tie up a serverless isolate for 23+ seconds doing nothing useful. Repeated across digest builds (these run on a schedule/cron per the A5 workflow inventory), this is a cheap way for a single compromised upstream to degrade the news pipeline for every user, not just consumers of that one feed.
+
+**What was not tested (stated honestly):** whether a live Vercel isolate actually serves *other unrelated* requests from the same warm instance during this stall (that depends on Vercel's per-isolate concurrency model and needs a deployed instance, out of scope for a local, in-process harness); and the exact byte size at which this would exceed Vercel's hard function-execution ceiling (extrapolating the O(n²) fit, crossing 8 seconds happens around 60,000 openers / ~900 KB — well within what a normal-looking RSS response could be — but this is a projection from the quadratic fit, not a separately measured data point).
+
+**Status for the plan:** B2 is answered, confirms and sharpens L1 with real numbers instead of a hypothesis. The entity-expansion framing from the original Gemini report (fast-xml-parser) was already ruled out by A2; this result replaces it with the correct mechanism and a concrete, reproducible payload.
 
 ## What is left
 
