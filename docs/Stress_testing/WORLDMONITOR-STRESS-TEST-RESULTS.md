@@ -8,7 +8,7 @@ Companion to `WORLDMONITOR-STRESS-TEST-BUILDMAP.md`. The buildmap holds the plan
 - Status labels follow `framework/schema/finding-rules.mjs`: `VERIFIED-SECURE`, `REPRODUCED-KNOWN`, `CANDIDATE-UNCONFIRMED`, `CONFIRMED-NOVEL`. A code-read hardening gap that is not exploitable on its own is labelled `HARDENING-OBSERVATION` here; decide at write-up time whether to promote it.
 - "Source" means the file and line range, so every claim can be re-checked.
 
-**Scoreboard so far (2026-10-01):** 13 of 13 Phase A tasks attempted. Phase B: B1, B2, B3, B9 complete. B1, B2 and B9 are `CONFIRMED-NOVEL` findings with measured/demonstrated evidence from the real, unmodified target code; B3 is `VERIFIED-SECURE`. 3 new findings, 2 controls re-confirmed in B (MCP tool-list integrity, widget sanitizer). 0 vulnerabilities in A. 8 controls re-confirmed in A. 8 hardening observations total (7 in A, 1 in B9's `Object.freeze` note). 6 premises from the Gemini reports shown wrong or not applicable (adds the MCP-registry cache-TTL rug-pull mechanism and the `wsRelayUrl` clobbering target). L1, L2 and L6 now answered (by B2, B1, and B9 respectively).
+**Scoreboard so far (2026-10-01):** 13 of 13 Phase A tasks attempted. Phase B: B1, B2, B3, B4, B9 complete. B1, B2 and B9 are `CONFIRMED-NOVEL` findings with measured/demonstrated evidence from the real, unmodified target code; B3 and B4 are `VERIFIED-SECURE`. 3 new findings, 3 controls re-confirmed in B (MCP tool-list integrity, widget sanitizer, client-storage key hygiene — the latter run against a live local instance of the actual app, not just read). 0 vulnerabilities in A. 8 controls re-confirmed in A. 8 hardening observations total (7 in A, 1 in B9's `Object.freeze` note). 6 premises from the Gemini reports shown wrong or not applicable. L1, L2 and L6 now answered (by B2, B1, and B9 respectively).
 
 ---
 
@@ -311,6 +311,29 @@ The user would see: *"This skill helps summarize breaking news headlines in a ne
 **Fix shape (not implemented, just what the gap implies):** show the full instructions text (or at minimum an explicit "+N more characters" count) before the Save button is enabled, and/or cap what's saved to what was actually previewed.
 
 **Status for the plan:** B9 is answered. The MCP-registry half of the hypothesis is refuted (`VERIFIED-SECURE`, with one hardening note); the Agent Skills half surfaces a new, independently-discovered, concrete, demonstrated finding. Recommend this replace the generic "rug-pull" framing on any slide — it is a much stronger, more specific story: *consent for 200 characters, exposure for 2,000.*
+
+## B4. Storage dump for the `wm_` key prefix and JWT-shaped strings — `VERIFIED-SECURE`
+
+**Finding: no API key material, session token, or JWT-shaped string anywhere in client-side storage, in a live, real local instance — and the code explains exactly why by design, not by accident.**
+
+**Method:** ran the actual app from the pinned checkout with `npm run dev` (Vite, with its real local proxy and in-process edge-function dev middleware — not a static mock), loaded in Claude's built-in browser at `http://localhost:3000`, unauthenticated (no account created, per ROE). Interacted with the app the way a real visitor would: opened Settings, switched the map time range, toggled a map layer off, let the live digest/risk-score panels populate from real (public, unauthenticated) upstream fetches. Then dumped everything:
+
+| Storage mechanism | What was found |
+|---|---|
+| `localStorage` | 29 keys — all UI/layout preference flags (`worldmonitor-panel-*`, `worldmonitor-layers`, feature-rollout opt-ins) and two cached public-data snapshots (`wm:theater-posture`, `wm:risk-scores` — country risk scores, not secrets) |
+| `sessionStorage` | 1 key (`wm-panel-viewed-v1`, a view-tracking flag) |
+| `IndexedDB` | 2 databases: `worldmonitor_db` (`baselines`: empty; `snapshots`: 1 timestamp-keyed entry), `worldmonitor_persistent_cache` (`entries`: 2 circuit-breaker state records, e.g. `breaker:Risk Scores`) |
+| `document.cookie` | empty (consistent with session cookies being HttpOnly, not with no session mechanism existing) |
+
+A regex sweep of all of the above (`/wm_[a-f0-9]{8,}/i` for the documented `wm_<40-hex>` API-key shape, `/eyJ...\...\./ ` for JWT-shaped strings) returned **zero matches** across ~49 KB of dumped storage content.
+
+**Why, not just that — read from the actual key-generation and session code:**
+- `src/services/api-keys.ts`'s `generateKey()` builds the plaintext `wm_<40-hex>` client-side and the function's own doc comment states the design intent directly: *"the plaintext key is shown to the user exactly once without a round-trip that could log it."* Only a SHA-256 hash of it is ever sent to the backend (Convex) for storage; the plaintext itself is never written to `localStorage`, `sessionStorage`, or IndexedDB by this code path — it exists in JS memory only, for one render.
+- `src/services/wm-session.ts`'s session-persistence layer (`STORAGE_KEY = 'wm-session-exp'`) deliberately stores **only `{exp: <timestamp>}`** in `sessionStorage` — a bare expiry number, never the session value itself (the comment at line 726 says the actual session lives in-memory and is intentionally lost on reload, re-derived from an HttpOnly cookie instead).
+
+**Scope, stated honestly:** this run was unauthenticated, per ROE (no test account was created). The two code-read findings above describe the authenticated/Pro-tier path's design but were not exercised live — I did not sign in, create an API key through the real UI, and then re-dump storage to watch it stay empty. The design read is consistent with the live, unauthenticated result, but a live authenticated re-run would make this fully conclusive rather than strongly indicated. Recommend as a fast follow-up with a disposable Clerk test account if one becomes available.
+
+**Status: extends WM-007.** Same conclusion, now backed by a live dump against the exact pinned commit (rather than, or in addition to, a prior static read) plus the specific mechanism (`generateKey()`'s one-time-display pattern and `wm-session.ts`'s bare-expiry pattern) that makes it true by design.
 
 ## What is left
 
