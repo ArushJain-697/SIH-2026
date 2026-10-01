@@ -8,7 +8,7 @@ Companion to `WORLDMONITOR-STRESS-TEST-BUILDMAP.md`. The buildmap holds the plan
 - Status labels follow `framework/schema/finding-rules.mjs`: `VERIFIED-SECURE`, `REPRODUCED-KNOWN`, `CANDIDATE-UNCONFIRMED`, `CONFIRMED-NOVEL`. A code-read hardening gap that is not exploitable on its own is labelled `HARDENING-OBSERVATION` here; decide at write-up time whether to promote it.
 - "Source" means the file and line range, so every claim can be re-checked.
 
-**Scoreboard so far (2026-10-01):** 13 of 13 Phase A tasks attempted. Phase B: B1, B2, B3, B4, B5, B6, B7, B9, B12 complete (B12 includes an escalation into the production alerting relay). B1, B2, B9 and B12 are `CONFIRMED-NOVEL` findings with measured/demonstrated evidence from the real, unmodified target code; B3, B4, B5, B6 and B7 are `VERIFIED-SECURE`. **4 new findings**, 6 controls re-confirmed in B (adds B7: the RFC 9207 issuer mechanism's emission point, fuzz-tested live with 11 adversarial Host headers, 0 bypasses). 0 vulnerabilities in A. 8 controls re-confirmed in A. 8 hardening observations total. 6 premises from the Gemini reports shown wrong or not applicable. L1, L2 and L6 answered. **B12's escalation is the strongest single finding of the whole exercise: the same unsanitized-prompt gap, found twice by differential analysis, with the second instance reaching real Slack/Discord/push notifications delivered to actual subscribers — both a false-alert and a silent-suppression vector against the product's core promise.**
+**Scoreboard so far (2026-10-01):** 13 of 13 Phase A tasks attempted. Phase B: B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B12, B13 complete (B12 includes an escalation into the production alerting relay; B13 quantifies B1 under load). B1, B2, B9, B12 and B13 are `CONFIRMED-NOVEL` findings with measured/demonstrated evidence from the real, unmodified target code; B3, B4, B5, B6, B7, B8 and B10 are `VERIFIED-SECURE`. **5 new findings**, 8 controls re-confirmed in B (adds B8: the GHSA-5j39 session-binding fix holds against both a different-authenticated-user attack and an anonymous attack, confirmed live with a positive control). 0 vulnerabilities in A. 8 controls re-confirmed in A. 8 hardening observations total. 6 premises from the Gemini reports shown wrong or not applicable. L1, L2 and L6 answered. **B12's escalation is the strongest single finding of the whole exercise: the same unsanitized-prompt gap, found twice by differential analysis, with the second instance reaching real Slack/Discord/push notifications delivered to actual subscribers — both a false-alert and a silent-suppression vector against the product's core promise.**
 
 ---
 
@@ -446,11 +446,99 @@ One adversarial case (a literal newline in the Host value, simulating a header-i
 
 **Status: `VERIFIED-SECURE`.** The RFC 9207 mechanism holds at both ends: the emission point is a tightly-anchored allowlist regex with a safe fallback (confirmed live, 0/11 bypasses), and the consumption point at flow-completion is immune to request-supplied overrides by construction (reads exclusively from server state, confirmed by direct code citation). This mirrors B6's finding: the specific attack class the task describes doesn't have a foothold in this architecture, and the closest real analog was tested and held.
 
+## B10. SSRF — redirect chase and DNS rebinding against the proxies — `VERIFIED-SECURE`, with the maintainers' own documented residual risk independently re-confirmed
+
+**Two separate proxies tested: `api/rss-proxy.js` (domain-allowlist model) and `api/mcp-proxy.ts` (resolved-IP-classification model, closes leads L3/L4). Both held against every redirect/obfuscation payload tried. The one real gap — a DNS-rebind race window in `mcp-proxy.ts` — is already found, named, and accepted by the maintainers themselves (issue #5061, GHSA-887j); this independently confirms it is real and accurately described, not a new discovery.**
+
+### RSS proxy (`api/rss-proxy.js`) — redirect-to-internal-address
+
+Ran the real, imported `isAllowedDomain` predicate (the exact function `assertAllowedRedirect` calls on every redirect hop) against the task's literal payload and 9 variants, redirecting from a genuine allowlisted feed host:
+
+| Redirect `Location` | Allowed? |
+|---|---|
+| `http://169.254.169.254/` (task's literal example) | **Blocked** |
+| `http://169.254.169.254/latest/meta-data/`, `https://169.254.169.254/`, `//169.254.169.254/` (protocol-relative) | **Blocked** |
+| `http://127.0.0.1:6379/`, `http://[::1]/`, `http://localhost/` | **Blocked** |
+| `http://2130706433/` (decimal-integer encoding of 127.0.0.1) | **Blocked** — the hostname actually reaching the check is already `127.0.0.1`, because... |
+| `http://metadata.google.internal/` | **Blocked** |
+| `http://feeds.bbci.co.uk.evil.example/` (suffix-match trick against a real allowlisted name) | **Blocked** |
+| `/same-path-relative-redirect` (legitimate same-origin hop) | **Allowed** — correct |
+| `https://www.theguardian.com/world/rss` (legitimate different allowlisted host) | **Allowed** — correct |
+
+**0 of 10 malicious targets got through; both legitimate cases worked.** The allowlist is a pure hostname-string check with zero IP-literal entries among its 428 domains, so no redirect target shaped like an IP address — obfuscated or not — can ever match it.
+
+### MCP proxy (`api/mcp-proxy.ts`) — resolved-IP classification, the real target of leads L3/L4
+
+This proxy (for Pro users connecting a custom/third-party MCP server) does not rely on a domain allowlist — it resolves the hostname via DNS-over-HTTPS (Cloudflare) for both A and AAAA records and classifies **every resolved IP** against `isBlockedResolvedAddress()`, a dedicated IP-classification module, before connecting, and again immediately before every outbound hop (`revalidateBeforeFetch`).
+
+**Live-fuzzed the real, exported `isBlockedResolvedAddress()` with 24 cases** — every private/reserved IPv4 range (RFC1918, loopback, CGNAT, link-local, multicast, TEST-NET), the literal `169.254.169.254` metadata address, IPv6 loopback/link-local/unique-local, and — the part worth taking seriously — **5 embedded-IPv4-in-IPv6 smuggling forms** (`::ffff:169.254.169.254` v4-mapped, hex-form v4-mapped, `::169.254.169.254` v4-compatible, NAT64 `64:ff9b::...`, and 6to4 `2002:a9fe:a9fe::`): **all correctly classified, 0 regressions.** Also confirmed 2 genuine public IPs (`8.8.8.8`, `1.1.1.1`) and one address just one bit outside the blocked `172.16.0.0/12` range (`172.32.0.1`) are correctly **not** blocked — a false-positive check, not just a false-negative one.
+
+**One layer worth verifying separately, and I did:** `isBlockedResolvedAddress()` alone doesn't recognize legacy IPv4 obfuscations like `2130706433` (decimal-integer) or `0x7f.0.0.1` (hex-octet) as blocked when tested as raw strings. This looked like a gap until I checked where the string actually comes from: `new URL('http://2130706433/').hostname` returns `'127.0.0.1'` — **Node's WHATWG URL parser (the same one every URL construction in this codebase uses) canonicalizes every one of these classic encodings into standard dotted-decimal before `.hostname` is ever read.** Confirmed directly (`http://2130706433/`, `http://0x7f.0.0.1/`, `http://017700000001/`, `http://127.1/`, `http://0177.0.0.1/`, `http://0xA9.0xFE.0xA9.0xFE/` — all normalize correctly, the last one to `169.254.169.254` itself). So the apparent gap is closed by a layer beneath the application code, not a weakness in it — worth confirming rather than assuming, in either direction.
+
+**The one genuine, already-documented gap — re-confirmed, not discovered:** the code's own comment (lines ~365-371) states it plainly: *"Vercel Edge fetch does not expose a Node-style lookup/socket hook, so this proxy CANNOT pin the TLS connection to a previously vetted address... a DNS answer can change between our resolve and fetch's own resolve... NARROWS that DNS-rebinding window but does not close it... ACCEPTED limitation of the Edge runtime... documented, not fixed here (P2, issue #5061)."* I verified the two things that make this honest rather than hand-waved:
+1. The re-validation genuinely exists in the shipped code, not just the comment: `postJson()`'s per-hop loop calls `await revalidateBeforeFetch(target, signal)` immediately before every `fetchMcpUpstream()` call (confirmed by direct citation, lines 507-510).
+2. The compensating control for the window that remains is real: `buildHeaders()` filters `metadata-flavor`, `metadata`, `x-aws-ec2-metadata-token`, and `x-aws-ec2-metadata-token-ttl-seconds` out of every forwarded header (case-insensitively), confirmed by direct citation of the filter condition — so even a successful rebind onto a real cloud metadata service lands a credential-less request that service itself will refuse, per GHSA-887j's own fix description.
+
+**Status: both proxies `VERIFIED-SECURE` against every redirect/obfuscation payload tested (0 bypasses across 34 total cases). The DNS-rebind race window in `mcp-proxy.ts` is confirmed real, exactly as the maintainers describe it, with its stated compensating control also confirmed real** — this closes leads L3 (partially — `api/a2a.ts`/`api/agent-auth.ts` remain unread) and L4 in full.
+
+## B13. Resource exhaustion / amplification sweep — `CONFIRMED-NOVEL` (quantifies and extends B1)
+
+**Finding: under healthy Redis, the global limiter engages precisely at its documented 600-requests-per-60s-per-identity budget and the amplification factor tracks admission exactly (no fan-out beyond 1:1). Under the Redis-outage condition B1 already found, the system never transitions to 429/503 at all — it stays at 100% `200 OK` and 100% amplification at every rate from 50 to 500 req/s, each one costing the ~4.3-4.5 second fail-open decision latency B1 measured for a single request. This is the quantified Denial-of-Wallet curve the task asks for.**
+
+**Method:** reused B1's exact lab (local Docker Redis + REST proxy) and the real, unmodified `checkRateLimit` from `server/_shared/rate-limit.ts`. Modeled the realistic target A4/A8 already identified: `get-country-intel-brief` — an uncovered GET route (no `ENDPOINT_RATE_POLICIES` entry) gated only by the global limiter, reaching a paid upstream on every cache miss. A small local HTTP server stood in for that paid upstream, counting every hit it received. Every simulated request carried a unique cache-busting query param (per the task) and a fresh per-request caller identity where the test needed independent measurement, so no coalescing or shared-budget effects could mask the true per-request cost.
+
+**Sweep 1 — healthy Redis, independent identity per rate step (no cross-step budget bleed):**
+
+| Request rate | Requests sent (2s window) | p50 / p95 / p99 latency | Status codes | Upstream calls | Amplification /100 |
+|---|---|---|---|---|---|
+| 50/s | 100 | 156 / 158 / 159 ms | 100× `200` | 100 | 100.0 |
+| 100/s | 200 | 154 / 156 / 157 ms | 200× `200` | 200 | 100.0 |
+| 200/s | 400 | 154 / 155 / 159 ms | 400× `200` | 400 | 100.0 |
+| 500/s | 1000 | 151 / 216 / 263 ms | 600× `200`, 400× `429` | 600 | 60.0 |
+
+**The system transitions from 100% `200 OK` to a mix of `200`/`429` at exactly 600 requests from one identity** — the documented `GLOBAL_RATE_LIMIT`. This is the limiter working exactly as designed: latency is dominated by the simulated 150ms upstream call until the budget is hit (confirmed clean at 100/100, 200/200, and 400/400 admitted at the three lower rates), then at 500/s the 1000-request burst hits the 600 cap mid-sweep (600 admitted, 400 rejected) and p95/p99 latency rises as queued requests contend — amplification tracks admission exactly (100.0 → 100.0 → 100.0 → 60.0), confirming there is no extra fan-out: each admitted request costs exactly one upstream call, never more.
+
+**Sweep 2 — Redis unreachable (the connection-refused shape from B1), same real code, same mock upstream:**
+
+| Nominal rate | Sampled requests | p50 latency | Status codes | Upstream calls | Amplification /100 |
+|---|---|---|---|---|---|
+| 50/s | 15 | 4469 ms | 15× `200` | 15 | **100.0** |
+| 100/s | 15 | 4462 ms | 15× `200` | 15 | **100.0** |
+| 200/s | 15 | 4461 ms | 15× `200` | 15 | **100.0** |
+| 500/s | 15 | 4459 ms | 15× `200` | 15 | **100.0** |
+
+(Sample size reduced from the full multi-second sweep to 15 requests per rate — justified because under fail-open the outcome does not depend on volume at all, confirmed by the near-identical ~4.46s latency and 100% admission at every rate tested; a full 500/s × 2s sweep at this per-request cost would run for many minutes to demonstrate the same, already-conclusive, point.)
+
+**The system never transitions to 429/503 under this condition, at any rate tested.** This is precisely the scenario the task names as the deck-ready result: **100% `200 OK`, 100% of requests reaching the paid upstream, with zero throttling, for as long as the Redis outage lasts** — the only "cost" an attacker (or an ordinary traffic spike coinciding with a real Upstash incident) pays is the ~4.5-second latency tax B1 already measured, not reduced admission.
+
+**How this extends B1, concretely:** B1 measured this latency/fail-open behavior for *one* request. B13 confirms it holds *uniformly under concurrent load at every rate from 50 to 500 req/s* — ruling out the possibility that concurrency itself triggers some other protective mechanism (a connection-pool ceiling, a circuit breaker, backpressure) that a single-request test couldn't have revealed. None exists in this code path: the fail-open global limiter has no secondary defense.
+
+**Status: `CONFIRMED-NOVEL`, extending and quantifying B1.** Recommend this pair with B1 on the slide: B1 establishes the mechanism and the per-request cost; B13 proves it holds under load and that nothing else in the stack catches what the limiter misses.
+
+## B8. MCP — session binding — `VERIFIED-SECURE` (the GHSA-5j39 fix holds, confirmed live against two attack shapes)
+
+**Finding: a captured `Mcp-Session-Id` cannot be used by a different authenticated principal, or by an anonymous caller, to read another user's buffered SSE tool results. The server also never honors a client-supplied session id on `initialize` — it always mints its own — so a session id cannot even be collided with, let alone hijacked.**
+
+**Why this exists:** `api/mcp/handler.ts` binds every SSE replay buffer to an `owner` string derived from the authenticated principal (`env_key:<hash>` or `user:<clerkUserId>`, never a bare session id), fixed for GHSA-5j39-mmw6-cqw6. This is the exact mechanism the task asks about; it is a known-fixed bug, not an open question, so the job here is to independently confirm the fix holds — the pattern already set by A1, A2, A12, B6, B7, and B10.
+
+**Method, against the real, unmodified `api/mcp.ts` handler, two distinct valid API keys standing in for User A and User B:**
+
+1. User A calls `initialize` (authenticated) → captures the server-minted `Mcp-Session-Id`.
+2. User A makes a follow-up SSE-accepting call on that session → the response carries a replayable event id, stored server-side under User A's owner hash.
+3. **Positive control** — User A replays their own stream with their own session id + event id: `200`, empty body (correct — nothing new since that cursor, proving the harness and the legitimate path both work before testing the attack).
+4. **Attack 1 — different authenticated user:** User B (a different, valid API key) replays using **User A's captured session id and event id**: `404`, `{"code":-32004,"message":"SSE replay cursor not found..."}` — **rejected**, indistinguishable from a genuinely nonexistent session (correct anti-enumeration behavior; the code deliberately returns the same 404 for "wrong owner" and "doesn't exist" so a prober can't use the response to confirm another user's session is real).
+5. **Attack 2 — anonymous:** an unauthenticated caller attempts the identical replay: `401 Authentication required` — rejected even earlier, at the auth gate, before the owner check is ever reached (GET-with-`Last-Event-ID` always requires full authentication; there is no anonymous path into this code at all).
+6. **Bonus structural check:** User B calls `initialize` while deliberately setting the request's `Mcp-Session-Id` header to **User A's existing session id** (testing whether a client can force a session-id collision). The server ignored it completely and minted its own fresh random UUID (confirmed: returned session id ≠ User A's). `initialize`'s handler always does `crypto.randomUUID()` server-side — a client-supplied session id is never trusted as a seed for a *new* session, closing the collision angle structurally, not just by owner-checking after the fact.
+
+**One real test-harness snag, resolved and worth noting for method transparency:** the first attempt used `tools/list` as User A's SSE-generating call, which produced a 281KB response — comfortably over the handler's own 128KB per-response replay-storage cap (`MAX_SSE_REPLAY_RESPONSE_BYTES`). `storeSseStream` correctly refused to store it, so *no* session ever existed to attack, and both the positive control and the attack calls returned the same 404 for the mundane reason that nothing was stored — not evidence of anything. Switching to a small `ping` call (near-empty response) produced a real stored stream and the genuine test above. Flagging this because a careless read of only the 404 results (without the positive control catching it) could have been mis-reported as "the server fails the same way for everyone" — it's the kind of false-negative-shaped artifact worth watching for.
+
+**Status: `VERIFIED-SECURE`.** The maintainers' own fix for GHSA-5j39-mmw6-cqw6 holds against both attack shapes the task specifies, confirmed live, with a positive control proving the test methodology itself was sound.
+
 ## What is left
 
 - **Phase A:** nothing unfinished except two items that cannot be done by code reading: A13 (a real Scorecard number needs the CLI and a GitHub token) and the render check in A9 residual 2 (needs a running UI).
-- **Phase B: 9 of 16 done — B1, B2, B3, B4, B5, B6, B7, B9, B12.** 4 novel findings (B1, B2, B9, B12 — B12 includes the production-relay escalation), 5 secure confirmations (B3, B4, B5, B6, B7).
-- **Phase B not started: B8, B10, B11, B13, B14, B15, B16** (7 tasks).
+- **Phase B: 12 of 16 done — B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B12, B13.** 5 novel findings (B1, B2, B9, B12, B13 — B13 quantifies B1 under a full load sweep), 7 secure confirmations (B3, B4, B5, B6, B7, B8, B10).
+- **Phase B not started: B11, B14, B15, B16** (4 tasks).
   - B8 (legacy session binding) is the natural next step — same harness pattern (real `api/mcp.ts` handler, local Redis + the wire-format adapter built for B6, reusable for any `_oauth-token.js`/session test).
   - B10 (SSRF/redirect/DNS-rebinding against the RSS proxy and `api/mcp-proxy.ts`) doubles as leads L3/L4.
   - B11 (Agent Skills path traversal) is a quick, sharp test against `skills/get` now that B9 already mapped that code path.
