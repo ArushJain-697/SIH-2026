@@ -8,7 +8,7 @@ Companion to `WORLDMONITOR-STRESS-TEST-BUILDMAP.md`. The buildmap holds the plan
 - Status labels follow `framework/schema/finding-rules.mjs`: `VERIFIED-SECURE`, `REPRODUCED-KNOWN`, `CANDIDATE-UNCONFIRMED`, `CONFIRMED-NOVEL`. A code-read hardening gap that is not exploitable on its own is labelled `HARDENING-OBSERVATION` here; decide at write-up time whether to promote it.
 - "Source" means the file and line range, so every claim can be re-checked.
 
-**Scoreboard so far (2026-10-01):** 13 of 13 Phase A tasks attempted (A1-A12 complete; A13 only partly possible, see its entry). 0 new vulnerabilities. 8 controls re-confirmed (A1, A2, A3, A5, A6, A7, A9, A12). 7 hardening observations (1 in A2, 3 in A6, 2 in A8, 1 in A5; A7 has 2 notes). 4 premises from the Gemini reports shown wrong or not applicable (fast-xml-parser on the live path, x402/UCP, the MCP header-mismatch test, fabricated live data). 8 leads queued.
+**Scoreboard so far (2026-10-01):** 13 of 13 Phase A tasks attempted, Phase B started (B1 complete). 1 new finding (B1, novel). 0 vulnerabilities in A. 8 controls re-confirmed in A (A1, A2, A3, A5, A6, A7, A9, A12). 7 hardening observations in A, plus B1's own. 4 premises from the Gemini reports shown wrong or not applicable. 8 leads queued (L2 now partly answered by B1).
 
 ---
 
@@ -172,9 +172,41 @@ Companion to `WORLDMONITOR-STRESS-TEST-BUILDMAP.md`. The buildmap holds the plan
 - **L8: CSP `connect-src https:` plus `'unsafe-inline'` styles.** Measure what a renderer XSS could reach (feeds B-phase client tests).
 - **L6: tool and app counts.** Report 3 says 63 tools and 10 MCP Apps; confirm by counting `TOOL_REGISTRY` before any slide uses those numbers.
 
+---
+
+# Phase B: dynamic tests against the real code
+
+**Lab:** Docker Desktop, localhost only. `redis:7-alpine` + `hiett/serverless-redis-http` (an Upstash-REST-protocol-compatible local proxy) on a private Docker network, driven by a `tsx` harness that **imports the pinned repo's own `server/_shared/rate-limit.ts` directly** — not a reimplementation. `@upstash/ratelimit` was pinned to the exact lockfile version (`2.0.8`) after a newer `2.2.0` resolved by a loose semver range produced a Lua-script error against this Redis build (noted so the method is honest about a setup snag). No code in the target repo was modified. All three documented failure shapes were tested: (1) Redis process down but the REST proxy answers, (2) the REST endpoint's port refuses connections, (3) a TCP blackhole that accepts and never replies (DNS rebinding / firewall drop shape). Lab torn down after the run (containers and network removed).
+
+## B1. Rate-limiter fail-open/fail-closed under dependency failure — `CONFIRMED-NOVEL`
+
+**Finding: the failure *shape* of the Redis outage, not just whether it fails open or closed, is what matters. A hanging or refused connection taxes every gated request — including every admitted one — by 4.3 to 5 seconds, platform-wide, before any policy decision is made.**
+
+**What was measured (single-call timings against the real imported `checkRateLimit`/`checkEndpointRateLimit`, averaged over repeated runs):**
+
+| Redis failure shape | `checkRateLimit` (global, 600/60s) | `checkEndpointRateLimit` (e.g. summarize-article, 30/60s) |
+|---|---|---|
+| Healthy | 15 ms → admitted | 2 ms → admitted/denied correctly |
+| Backend down, REST proxy answers with an error | 880 ms → **admitted** (fail-open) | 16 ms → **503** (fail-closed) |
+| Connection refused (SDK-level retry) | **4307 ms** → admitted (fail-open) | **4306 ms** → 503 (fail-closed) |
+| TCP blackhole (accepts, never replies) | **5003 ms** → admitted (fail-open) | **4511 ms** → 503 (fail-closed, hits its own abort timeout) |
+
+**Root cause, read from `node_modules/@upstash/redis`'s own code (not the target repo, but a direct dependency of it):** on a network-level failure (a thrown `fetch`, as opposed to an HTTP error response), the SDK retries **5 times with exponential backoff** (`50 * e^i` ms per attempt: ~50/136/369/1004/2729 ms) before giving up — about 4.3 seconds total. This default is controlled by `retry: {...}` on the client; the target's own code only disables it under `NODE_TEST_CONTEXT` (`REDIS_TEST_RETRY_OPTS`, `rate-limit.ts` line 26), so it is fully active in production. A hung connection instead rides the endpoint limiter's explicit `AbortSignal.timeout(4500)` (`ENDPOINT_REDIS_ABORT_TIMEOUT_MS`, line 35) or whatever bound the global path has.
+
+**Why this is a real finding and not just "fail-open is documented":**
+- A1-A8's existing documentation and comments are honest that the global limiter fails open by design. What is **not** documented or tested anywhere in the repo's own comments is that the fail-open (and fail-closed) *decision itself* can take over 4 seconds under a plausible real-world failure mode (a network partition or a DNS/firewall issue reaching Upstash — not a graceful "Redis is down" signal).
+- `checkRateLimit` runs on **every** gateway request that has no endpoint-specific policy (`server/gateway.ts` line 2294-2306, confirmed by direct read: `if (!isServerSubRequest && !governedByApiKeyLayer && !hasEndpointRatePolicy(pathname))`). A4/A8 already counted **187 GET routes** with no `ENDPOINT_RATE_POLICIES` entry — every one of them is gated only by this global check. Under this failure mode, every request to any of those 187 routes is **admitted** (fail-open, so no defender signal) **and** holds an edge-function execution slot open for 4.3-5 extra seconds.
+- This is resource exhaustion (OWASP API4:2023) that does not need a high request rate to matter: a moderate number of concurrent requests, sustained for the duration of a Redis network blip, can occupy far more concurrent execution time than the same request count would normally cost, with no 429s raised to show it is happening. It directly sharpens leads L2 and L5 from the A-phase with real numbers instead of a hypothesis.
+- **Scope check, stated honestly:** one mitigating control exists for the costliest uncovered route found in A4 (`get-country-intel-brief`, which reaches an LLM): it reads through `cachedFetchJson`, which coalesces concurrent cache-miss callers for the same key into one in-flight fetch (`server/_shared/redis.ts` lines 1050-1065). So this specific route's *upstream LLM spend* does not multiply with concurrent callers — only the *edge-function execution time per caller* does, because each caller still pays the full 4.3-5 s before or while joining the coalesced fetch. The amplification is against platform concurrency/availability, not directly against that one route's wallet. A route without this coalescing (most of the other 186) would not have even that mitigation — not individually re-verified here.
+- **Impact if exploited:** during any real Upstash/network incident (not attacker-controlled, but a known class of cloud incident), legitimate traffic volume alone — no attacker needed — could serialize against Vercel's concurrency ceiling because every uncovered route now costs 4-5x its normal execution time. An attacker who can induce or time around such a window turns ordinary traffic into a denial-of-service multiplier for free, since admission still succeeds.
+
+**What was not tested (stated honestly):** the actual Vercel Edge Function concurrency ceiling and whether 504s cascade platform-wide — that needs a Vercel account and real traffic, out of scope for a local lab. The claim above is "serverless execution time per request multiplies 280x-330x (15ms → 4.3-5s) under this specific failure shape," not "this causes an outage," which would need the platform-level test.
+
+**Status for the plan:** B1 is answered and sharper than its original hypothesis. Recommend folding L2 into this entry (closed as answered) and keeping L5 (translate-mode cost ceiling) as the next thing to measure, since it is the one endpoint-covered, LLM-backed route and the in-flight coalescing note above only partially answers it.
+
 ## What is left
 
 - **Phase A:** nothing unfinished except two items that cannot be done by code reading: A13 (a real Scorecard number needs the CLI and a GitHub token) and the render check in A9 residual 2 (needs a running UI).
 - **Phase B (all 16 tasks, B1-B16):** not started. Needs the local lab with mocked upstreams (never the `docker/` frontend image; see A6).
-- **Leads L1-L8:** unresolved. L1, L2, L5 feed B-tasks; L3 (`api/a2a.ts`, `api/agent-auth.ts`) and L4 (`api/mcp-proxy.ts`) are code reads still to do; L7 is a release-signing read.
+- **Leads L1-L8:** L2 answered by B1 (see above); L1, L5 next; L3, L4, L7 still unresolved code reads. L1, L2, L5 feed B-tasks; L3 (`api/a2a.ts`, `api/agent-auth.ts`) and L4 (`api/mcp-proxy.ts`) are code reads still to do; L7 is a release-signing read.
 - **Deck work after results:** slide 3 architecture upgrade (Part 3 of the build map), slide numbers, portal text refresh.
