@@ -188,7 +188,7 @@ function main() {
       non_get_gateway_routes_uncovered: nonGetGatewayUncovered.length,
       premium_gated_endpoints: premiumCount,
       edge_exceptions_with_no_rate_limit_registry_entry_at_all: edgeExceptionsWithNoPolicyAtAll.length,
-      note: 'non_get_gateway_routes_uncovered should read 0, matching findings/WM-003 (independently re-derived from a different data source: .openapi.json here vs regex-over-TS there). edge_exceptions_with_no_rate_limit_registry_entry_at_all counts edge functions with NEITHER an explicit policy NOR an explicit exemption/fallback decision — these are NOT necessarily gaps (many are GET-only reads that never needed a registry entry at all; method is unknown for this class, see the methods:[] comment above), so this number needs a manual read before any claim, unlike non_get_gateway_routes_uncovered which is a real, method-verified guardrail check.',
+      note: 'non_get_gateway_routes_uncovered should read 0, matching findings/WM-003 (independently re-derived from a different data source: .openapi.json here vs regex-over-TS there). edge_exceptions_with_no_rate_limit_registry_entry_at_all counts edge functions with NEITHER an explicit policy NOR an explicit exemption/fallback decision - these are NOT necessarily gaps (many are GET-only reads that never needed a registry entry at all; method is unknown for this class, see the methods:[] comment above), so this number needs a manual read before any claim, unlike non_get_gateway_routes_uncovered which is a real, method-verified guardrail check.',
     },
     endpoints,
   };
