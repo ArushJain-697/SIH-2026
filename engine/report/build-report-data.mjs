@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Generates report-app/src/data/assessment-data.json — the SINGLE source
+ * Generates report-app/src/data/assessment-data.json - the SINGLE source
  * of data for the React report app (build-map-advanced ticket #F1, pivoted
  * from a static HTML file to a real React frontend per explicit request).
  *
- * The React app never hand-types a finding, a score, or a coverage cell —
+ * The React app never hand-types a finding, a score, or a coverage cell -
  * everything renders from this one generated file, which is itself built
  * straight from every findings/<id>/finding.json plus
  * register/advisories.json, the same sources framework/generate-report.mjs
@@ -95,7 +95,7 @@ async function main() {
 
   const data = {
     generated_at: new Date().toISOString(),
-    generator: 'engine/report/build-report-data.mjs — regenerate, never hand-edit report-app/src/data/assessment-data.json directly',
+    generator: 'engine/report/build-report-data.mjs - regenerate, never hand-edit report-app/src/data/assessment-data.json directly',
     summary: {
       total_findings: findings.length,
       status_counts: statusCounts,
@@ -119,7 +119,7 @@ async function main() {
 
   mkdirSync(join(ROOT, 'report-app/src/data'), { recursive: true });
   writeFileSync(OUT_PATH, JSON.stringify(data, null, 2));
-  console.log(`build-report-data: wrote report-app/src/data/assessment-data.json — ${findings.length} findings, ${register.advisories.length} advisories, ${data.summary.scope_areas_with_evidence}/7 scope areas with evidence, ${regressionResults.length} regression manifest(s)`);
+  console.log(`build-report-data: wrote report-app/src/data/assessment-data.json - ${findings.length} findings, ${register.advisories.length} advisories, ${data.summary.scope_areas_with_evidence}/7 scope areas with evidence, ${regressionResults.length} regression manifest(s)`);
 }
 
 main();

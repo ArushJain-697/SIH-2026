@@ -1,0 +1,184 @@
+/* ───────────────────────── SEAM console v2 ─────────────────────────
+   Built from scratch per the fitness/finance-dashboard reference set:
+   solid colour-filled tiles (never white-border-grey-text), huge numbers
+   as the hero of every tile, minimal copy, asymmetric sizing, a dark
+   tile mixed with bright tiles on the same page. Kept in SEAM's ember
+   palette instead of literal purple/pink. */
+
+.v2 {
+  --v2-bg: #0b0706;
+  --v2-bg-2: #120b09;
+  --v2-ink: #fdf8f3;
+  --v2-muted: rgba(253, 248, 243, 0.78);
+  --v2-faint: rgba(253, 248, 243, 0.6);
+  --v2-line: rgba(255, 255, 255, 0.08);
+
+  --v2-ember-1: #ff7a3d;
+  --v2-ember-2: #fe3b0f;
+  --v2-amber: #ffb020;
+  --v2-amber-ink: #2b1a02;
+  --v2-moss: #3fcf8e;
+  --v2-moss-ink: #042415;
+  --v2-cream: #fff3e6;
+  --v2-cream-ink: #2a1708;
+  --v2-charcoal: #18110d;
+
+  --v2-radius-lg: 28px;
+  --v2-radius-md: 20px;
+  --v2-radius-sm: 14px;
+  --v2-font: 'Urbanist Variable', 'Outfit', system-ui, sans-serif;
+
+  background: var(--v2-bg);
+  color: var(--v2-ink);
+  font-family: var(--v2-font);
+  min-height: 100vh;
+}
+.v2 * { box-sizing: border-box; }
+/* The console's global index.css sets h1-h4 to a near-black neutral for light
+   surfaces; v2 is a dark surface, so every heading needs this re-asserted. */
+.v2 h1, .v2 h2, .v2 h3, .v2 h4 { color: var(--v2-ink); }
+.v2-wrap { max-width: 1320px; margin: 0 auto; padding: 0 1.5rem 5rem; position: relative; z-index: 1; }
+
+/* ---------- Top nav (kept: top capsule, restyled) ---------- */
+.v2-nav-wrap { position: sticky; top: 0; z-index: 50; padding: 1.1rem 1.5rem 0.6rem; }
+.v2-nav {
+  max-width: 1320px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; background: rgba(10, 6, 5, 0.82); backdrop-filter: blur(16px); border: 1px solid var(--v2-line);
+  border-radius: 999px; padding: 0.6rem 0.7rem 0.6rem 1.4rem; box-shadow: 0 20px 50px -24px rgba(0, 0, 0, 0.8);
+}
+.v2-logo { background: none; border: 0; color: #fff; font-weight: 800; font-size: 1.15rem; letter-spacing: 0.08em; cursor: pointer; }
+.v2-tabs { display: flex; align-items: center; gap: 0.2rem; background: rgba(255, 255, 255, 0.04); border-radius: 999px; padding: 4px; }
+.v2-tab { background: none; border: 0; color: var(--v2-muted); font-family: var(--v2-font); font-weight: 600; font-size: 0.88rem; padding: 0.55rem 1.05rem; border-radius: 999px; cursor: pointer; transition: background 0.2s, color 0.2s; white-space: nowrap; }
+.v2-tab.is-on { background: #fff; color: #140b08; }
+.v2-tab:not(.is-on):hover { color: #fff; }
+.v2-cta { display: inline-flex; align-items: center; gap: 0.4rem; background: linear-gradient(135deg, var(--v2-ember-1), var(--v2-ember-2)); color: #fff; font-weight: 700; font-size: 0.86rem; padding: 0.65rem 1.1rem; border-radius: 999px; border: 0; cursor: pointer; box-shadow: 0 10px 24px -8px rgba(255, 60, 20, 0.6); }
+
+/* ---------- Page head ---------- */
+.v2-head { padding: 2rem 0 1.5rem; display: flex; justify-content: space-between; align-items: flex-end; gap: 1.5rem; flex-wrap: wrap; }
+.v2-head h1 { font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+.v2-head p { color: var(--v2-muted); font-size: 0.92rem; margin-top: 0.35rem; max-width: 56ch; }
+.v2-back { display: inline-flex; align-items: center; gap: 0.4rem; background: none; border: 0; color: var(--v2-muted); font-size: 0.85rem; cursor: pointer; padding: 0; margin-bottom: 1rem; }
+.v2-back:hover { color: #fff; }
+.v2 code { background: rgba(255, 255, 255, 0.1); color: #ffcf9e; }
+.v2 .prose { color: var(--v2-muted); }
+.v2 .prose h1, .v2 .prose h2, .v2 .prose h3, .v2 .prose strong { color: #fff; }
+.v2 .prose a { color: #ff8a52; }
+.v2 .prose th { background: rgba(255, 255, 255, 0.05); color: #fff; }
+.v2 .prose th, .v2 .prose td { border-color: var(--v2-line); }
+.v2 .prose blockquote { border-left-color: #ff7a3d; color: var(--v2-faint); }
+
+/* ---------- Tile primitive: the core building block, everywhere ---------- */
+.v2-tile {
+  position: relative; overflow: hidden; border-radius: var(--v2-radius-md); padding: 1.4rem 1.5rem;
+  transition: transform 260ms cubic-bezier(.2,.8,.2,1), box-shadow 260ms cubic-bezier(.2,.8,.2,1);
+  min-width: 0;
+}
+.v2-tile:hover { transform: translateY(-4px); }
+.v2-tile.v2-ember { background: linear-gradient(140deg, var(--v2-ember-1), var(--v2-ember-2)); color: #fff; box-shadow: 0 24px 50px -20px rgba(255, 60, 20, 0.55); }
+.v2-tile.v2-amber { background: linear-gradient(140deg, #ffcf6b, var(--v2-amber)); color: var(--v2-amber-ink); box-shadow: 0 24px 50px -20px rgba(255, 176, 32, 0.4); }
+.v2-tile.v2-moss { background: linear-gradient(140deg, #6fe7b3, var(--v2-moss)); color: var(--v2-moss-ink); box-shadow: 0 24px 50px -20px rgba(63, 207, 142, 0.4); }
+.v2-tile.v2-cream { background: var(--v2-cream); color: var(--v2-cream-ink); box-shadow: 0 20px 40px -24px rgba(0, 0, 0, 0.3); }
+.v2-tile.v2-dark { background: linear-gradient(160deg, #211713, var(--v2-charcoal)); color: #fff; border: 1px solid var(--v2-line); }
+.v2-tile.v2-glass { background: linear-gradient(170deg, #211a15, #150f0b); border: 1px solid var(--v2-line); color: #fff; }
+
+.v2-tile-top { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.9rem; }
+.v2-tile-icon { width: 36px; height: 36px; border-radius: 12px; background: rgba(0, 0, 0, 0.12); display: grid; place-items: center; flex-shrink: 0; }
+.v2-tile.v2-cream .v2-tile-icon, .v2-tile.v2-dark .v2-tile-icon, .v2-tile.v2-glass .v2-tile-icon { background: rgba(255, 255, 255, 0.08); }
+.v2-tile-label { display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.85; margin-bottom: 0.9rem; }
+.v2-tile-num { font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 800; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+.v2-tile-sub { font-size: 0.82rem; opacity: 0.88; margin-top: 0.3rem; }
+
+/* Stat-tile modifier: icon + big number + label, all centred and bolder (KPI tiles, not the hero promo tiles) */
+.v2-tile.v2-stat { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 1.7rem 1.3rem; }
+.v2-tile.v2-stat .v2-tile-top { justify-content: center; margin-bottom: 0.7rem; }
+.v2-tile.v2-stat .v2-tile-icon { width: 42px; height: 42px; }
+.v2-tile.v2-stat .v2-tile-num { font-size: clamp(2.1rem, 3.4vw, 2.8rem); font-weight: 900; }
+.v2-tile.v2-stat .v2-tile-sub { font-size: 0.85rem; font-weight: 600; }
+.v2-tile-bar { align-self: stretch; width: 100%; height: 6px; border-radius: 99px; background: rgba(0, 0, 0, 0.15); margin-top: 1rem; overflow: hidden; }
+.v2-tile.v2-cream .v2-tile-bar, .v2-tile.v2-dark .v2-tile-bar, .v2-tile.v2-glass .v2-tile-bar { background: rgba(255, 255, 255, 0.12); }
+.v2-tile-bar i { display: block; height: 100%; border-radius: 99px; background: currentColor; transition: width 1s cubic-bezier(.2,.8,.2,1); }
+
+/* ---------- Asymmetric bento grid ---------- */
+.v2-bento { display: grid; grid-template-columns: repeat(12, 1fr); gap: 1rem; margin-bottom: 1rem; }
+.v2-span-8 { grid-column: span 8; }
+.v2-span-7 { grid-column: span 7; }
+.v2-span-6 { grid-column: span 6; }
+.v2-span-5 { grid-column: span 5; }
+.v2-span-4 { grid-column: span 4; }
+.v2-span-3 { grid-column: span 3; }
+.v2-span-12 { grid-column: span 12; }
+
+/* ---------- Pills (badges, chips, filters) ---------- */
+.v2-pill { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; font-weight: 700; padding: 0.3rem 0.7rem; border-radius: 999px; white-space: nowrap; }
+.v2-pill.ember { background: rgba(255, 90, 32, 0.16); color: #ff8a52; }
+.v2-pill.amber { background: rgba(255, 176, 32, 0.16); color: #ffc256; }
+.v2-pill.moss { background: rgba(63, 207, 142, 0.16); color: #5fe3a8; }
+.v2-pill.neutral { background: rgba(255, 255, 255, 0.08); color: var(--v2-muted); }
+.v2-filter { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--v2-line); color: var(--v2-muted); font-size: 0.82rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 999px; cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s; }
+.v2-filter:hover { color: #fff; border-color: rgba(255, 255, 255, 0.2); }
+.v2-filter.is-on { background: #fff; color: #140b08; border-color: #fff; }
+.v2-filter-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.7rem; }
+
+/* ---------- Roadmap (connected path + detail panel) ---------- */
+.v2-road { display: grid; grid-template-columns: 190px 1fr; gap: 1.5rem; align-items: start; }
+.v2-road-path { position: relative; display: flex; flex-direction: column; gap: 0.2rem; }
+.v2-road-path::before { content: ''; position: absolute; left: 23px; top: 24px; bottom: 24px; width: 2px; background: repeating-linear-gradient(180deg, rgba(255,255,255,0.14) 0 4px, transparent 4px 9px); }
+.v2-road-node { position: relative; display: flex; align-items: center; gap: 0.75rem; background: none; border: 0; cursor: pointer; padding: 0.55rem 0.4rem; border-radius: var(--v2-radius-sm); text-align: left; transition: background 150ms ease; }
+.v2-road-node:hover { background: rgba(255, 255, 255, 0.04); }
+.v2-road-chip { position: relative; z-index: 1; flex-shrink: 0; min-width: 46px; height: 46px; padding: 0 8px; border-radius: 16px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 0.78rem; transition: box-shadow 200ms ease, transform 200ms ease; }
+.v2-road-node.is-active .v2-road-chip { transform: scale(1.08); }
+.v2-road-text { display: flex; flex-direction: column; min-width: 0; }
+.v2-road-text b { font-family: 'JetBrains Mono Variable', monospace; font-size: 0.82rem; color: var(--v2-faint); }
+.v2-road-node.is-active .v2-road-text b { color: #fff; }
+.v2-road-text span { font-size: 0.66rem; color: var(--v2-faint); }
+.v2-road-detail { border-radius: var(--v2-radius-lg); padding: 1.8rem 2rem; min-height: 230px; position: relative; overflow: hidden; }
+.v2-road-detail h3 { font-family: 'JetBrains Mono Variable', monospace; font-size: 1.8rem; margin: 0.6rem 0 0.7rem; }
+.v2-road-detail p { font-size: 0.95rem; line-height: 1.6; max-width: 60ch; opacity: 0.92; }
+.v2-road-stats { display: flex; gap: 2.2rem; margin-top: 1.3rem; }
+.v2-road-stats b { display: block; font-size: 1.7rem; font-weight: 800; letter-spacing: -0.02em; }
+.v2-road-stats span { font-size: 0.72rem; opacity: 0.75; }
+
+/* ---------- Chart surfaces ---------- */
+.v2-chart-card { border-radius: var(--v2-radius-md); padding: 1.5rem 1.6rem; background: linear-gradient(170deg, #1c1511, #130d0a); border: 1px solid var(--v2-line); box-shadow: 0 30px 60px -36px rgba(0, 0, 0, 0.7); }
+.v2-chart-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem; }
+.v2-chart-head h3 { font-size: 1.08rem; font-weight: 700; margin: 0; }
+.v2-chart-head .sub { font-size: 0.78rem; color: var(--v2-muted); margin-top: 2px; }
+.v2-tip { background: #fff; color: #140b08; padding: 0.45rem 0.7rem; border-radius: 10px; font-size: 0.78rem; font-weight: 600; box-shadow: 0 10px 24px -8px rgba(0,0,0,0.5); }
+
+/* ---------- Rows / list surfaces (for tables that must stay data-dense) ---------- */
+.v2-row-list { display: flex; flex-direction: column; margin: 0 -0.5rem; }
+.v2-row { display: flex; align-items: center; flex-wrap: wrap; row-gap: 0.5rem; gap: 1rem; padding: 1rem 0.5rem; border-radius: 14px; border-left: 3px solid var(--v2-line); cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+.v2-row:hover { background: rgba(255, 255, 255, 0.045); }
+.v2-row.is-ember { border-left-color: #ff7a3d; }
+.v2-row.is-amber { border-left-color: #ffb020; }
+.v2-row.is-moss { border-left-color: #3fcf8e; }
+.v2-row-id { font-family: 'JetBrains Mono Variable', monospace; font-weight: 700; font-size: 0.82rem; color: rgba(255, 255, 255, 0.82); width: 56px; flex-shrink: 0; }
+.v2-row-main { flex: 1; min-width: 0; }
+.v2-row-title { font-size: 0.92rem; font-weight: 600; color: #fff; }
+.v2-row-meta { font-size: 0.76rem; color: var(--v2-faint); margin-top: 3px; }
+.v2-row-score { min-width: 50px; text-align: center; font-weight: 800; font-size: 0.92rem; flex-shrink: 0; font-variant-numeric: tabular-nums; padding: 0.3rem 0.6rem; border-radius: 9px; background: rgba(255, 255, 255, 0.08); color: #fff; }
+.v2-row-score.is-na { font-size: 0.68rem; font-weight: 700; color: var(--v2-faint); background: rgba(255, 255, 255, 0.04); letter-spacing: 0.03em; }
+
+/* ---------- Accordion (for PS export density fix) ---------- */
+.v2-acc { border-radius: var(--v2-radius-md); background: linear-gradient(170deg, #1c1511, #130d0a); border: 1px solid var(--v2-line); overflow: hidden; margin-bottom: 0.6rem; box-shadow: 0 20px 40px -30px rgba(0, 0, 0, 0.7); }
+.v2-acc-head { width: 100%; display: flex; align-items: center; gap: 0.9rem; background: none; border: 0; padding: 1rem 1.3rem; cursor: pointer; text-align: left; color: #fff; }
+.v2-acc-head .chev { margin-left: auto; color: var(--v2-faint); transition: transform 0.2s; flex-shrink: 0; }
+.v2-acc.is-open .chev { transform: rotate(180deg); }
+.v2-acc-body { padding: 0 1.3rem 1.3rem; }
+.v2-field { display: grid; grid-template-columns: 170px 1fr; gap: 1rem; padding: 0.7rem 0; border-top: 1px solid var(--v2-line); }
+.v2-field .k { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--v2-faint); }
+.v2-field .v { font-size: 0.86rem; color: var(--v2-muted); line-height: 1.55; }
+.v2-field .v b { color: #fff; }
+
+/* ---------- Tabs (Methodology) ---------- */
+.v2-tabrow { display: flex; gap: 0.4rem; margin-bottom: 1.1rem; }
+
+@media (max-width: 960px) {
+  .v2-bento { grid-template-columns: 1fr; }
+  .v2-span-8, .v2-span-7, .v2-span-6, .v2-span-5, .v2-span-4, .v2-span-3, .v2-span-12 { grid-column: span 1; }
+  .v2-road { grid-template-columns: 1fr; }
+  .v2-road-path { flex-direction: row; overflow-x: auto; padding-bottom: 0.5rem; }
+  .v2-road-path::before { display: none; }
+  .v2-field { grid-template-columns: 1fr; gap: 0.25rem; }
+  .v2-tabs { display: none; }
+}

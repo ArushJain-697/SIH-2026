@@ -20,7 +20,7 @@ cp engine/scanners/output/sca-report.json "$EVIDENCE_DIR/"
 cp engine/scanners/output/sbom.cyclonedx.json "$EVIDENCE_DIR/"
 
 echo
-echo "--- verifying findings/WM-012/remediation.patch applies cleanly against the real pinned source (build-map-advanced #E3) ---"
+echo "--- verifying findings/WM-012/remediation.patch applies cleanly against the real pinned source ---"
 (cd .cache/worldmonitor-src && git apply --check ../../findings/WM-012/remediation.patch && echo "git apply --check: OK, patch applies cleanly")
 
 echo

@@ -1,5 +1,5 @@
 {
-  "$comment": "Prior-art register — build-map ticket #6 (CORE, FOUNDATION). Bible §2.2. These are the target's PUBLISHED advisories. They are prior art: reproduce them (labelled REPRODUCED-KNOWN) to validate the method, NEVER claim them as novel discoveries. A finding labelled CONFIRMED-NOVEL must be absent from this register.",
+  "$comment": "Prior-art register. These are the target's PUBLISHED advisories. They are prior art: reproduce them (labelled REPRODUCED-KNOWN) to validate the method, NEVER claim them as novel discoveries. A finding labelled CONFIRMED-NOVEL must be absent from this register.",
   "target": "github.com/koala73/worldmonitor",
   "source": "https://github.com/koala73/worldmonitor/security/advisories",
   "verified_on": "2026-09-28",
@@ -64,7 +64,7 @@
       "platform": "MCP / Upstash",
       "published": "2026-07-04",
       "demo_candidate": true,
-      "note": "THE MONEY SHOT. Matches the Denial-of-Wallet 'Vector B' theory almost word-for-word. Theory + the target's own scar = un-dismissable."
+      "note": "Matches the Denial-of-Wallet 'Vector B' pattern almost word-for-word: theory plus the target's own published scar."
     },
     {
       "id": "GHSA-9m4c-824h-m4xw",

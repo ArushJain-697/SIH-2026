@@ -1,8 +1,8 @@
 {
   "id": "WM-008",
-  "title": "Authentication & session management — JWT alg pinning, OAuth state atomicity, and session cookie attributes independently verified",
+  "title": "Authentication & session management - JWT alg pinning, OAuth state atomicity, and session cookie attributes independently verified",
   "status": "VERIFIED-SECURE",
-  "component": "server/auth-session.ts (jose jwtVerify), api/discord+slack/oauth/callback.ts (state consumption), api/wm-session.js (session cookie issuance) — real target source",
+  "component": "server/auth-session.ts (jose jwtVerify), api/discord+slack/oauth/callback.ts (state consumption), api/wm-session.js (session cookie issuance) - real target source",
   "trust_boundary": 1,
   "control_tested": "Three independent, targeted static checks, each against a documented real attack class: (1) every jose jwtVerify() call site pins an explicit, non-empty algorithms array excluding 'none' (closes the classic alg-confusion/none-algorithm JWT bypass, CWE-347); (2) OAuth callback state consumption uses an atomic Redis GETDEL rather than a check-then-delete pair (closes exactly the TOCTOU class the target's own GHSA-9m4c-824h-m4xw was); (3) every real session cookie-value construction found in source includes Secure + SameSite, and HttpOnly unless it is an explicit non-session clear-cookie.",
 
@@ -11,16 +11,16 @@
     "wstg": "WSTG-ATHN-04"
   },
 
-  "description": "This closes the one PS scope area (1: Authentication & session management) that the earlier pass of this assessment left untested, and directly targets the class of the register's own three auth-adjacent advisories (GHSA-f6gj refresh-token reuse, GHSA-9m4c OAuth state fail-open, GHSA-5j39 MCP SSE replay — all already fixed by the maintainer). Check 1 confirms `server/auth-session.ts` pins `algorithms: ['RS256']` on its jose jwtVerify() call — jose enforces whatever algorithm list it is given, so an explicit, non-'none' pin closes the historical 'alg confusion' JWT bypass class entirely. Check 2 confirms the CURRENT, fixed OAuth callback code (`api/discord/oauth/callback.ts`, `api/slack/oauth/callback.ts`) consumes state via Redis `GETDEL` — an atomic get-and-delete — rather than a separate get-then-delete pair, which is exactly the fix the register's GHSA-9m4c class needed. Check 3 confirms every one of 5 real session cookie-value constructions found in source (`api/wm-session.js`) sets `HttpOnly; Secure; SameSite=Lax`.",
-  "preconditions": "N/A — static analysis, no running instance required.",
-  "business_impact": "N/A (all three controls held). Reported to close PS scope area 1 with real, targeted evidence rather than leaving it NOT TESTED. The scanner's own cookie-attribute check initially flagged 3 files as unsafe on a first pass; manual read showed these were comment-only mentions of the real HttpOnly cookie implemented elsewhere (wm-session.js), not separate insecure cookie paths. The check was narrowed to anchor on an actual cookie-value string (containing Path=/) rather than the bare word 'HttpOnly' anywhere in a file, and re-run — 0 unsafe on the corrected check. This false-positive-then-fix is documented in the scanner's own source comment and here, not silently corrected, per this project's established discipline (see WM-004, WM-005).",
+  "description": "This closes the one PS scope area (1: Authentication & session management) that the earlier pass of this assessment left untested, and directly targets the class of the register's own three auth-adjacent advisories (GHSA-f6gj refresh-token reuse, GHSA-9m4c OAuth state fail-open, GHSA-5j39 MCP SSE replay - all already fixed by the maintainer). Check 1 confirms `server/auth-session.ts` pins `algorithms: ['RS256']` on its jose jwtVerify() call - jose enforces whatever algorithm list it is given, so an explicit, non-'none' pin closes the historical 'alg confusion' JWT bypass class entirely. Check 2 confirms the CURRENT, fixed OAuth callback code (`api/discord/oauth/callback.ts`, `api/slack/oauth/callback.ts`) consumes state via Redis `GETDEL` - an atomic get-and-delete - rather than a separate get-then-delete pair, which is exactly the fix the register's GHSA-9m4c class needed. Check 3 confirms every one of 5 real session cookie-value constructions found in source (`api/wm-session.js`) sets `HttpOnly; Secure; SameSite=Lax`.",
+  "preconditions": "N/A - static analysis, no running instance required.",
+  "business_impact": "N/A (all three controls held). Reported to close PS scope area 1 with real, targeted evidence rather than leaving it NOT TESTED. The scanner's own cookie-attribute check initially flagged 3 files as unsafe on a first pass; manual read showed these were comment-only mentions of the real HttpOnly cookie implemented elsewhere (wm-session.js), not separate insecure cookie paths. The check was narrowed to anchor on an actual cookie-value string (containing Path=/) rather than the bare word 'HttpOnly' anywhere in a file, and re-run - 0 unsafe on the corrected check. This false-positive-then-fix is documented in the scanner's own source comment and here, not silently corrected, per this project's established discipline (see WM-004, WM-005).",
   "remediation": "No fix required for any of the three checks. Recommend re-running engine/scanners/auth-session.mjs on future commits, since new OAuth providers or cookie-issuing code paths could in principle introduce a gap this scan specifically watches for.",
 
   "references": {
     "ghsa": null,
     "external": [
       "engine/scanners/auth-session.mjs (this project's independent scanner)",
-      "GHSA-9m4c-824h-m4xw (the real advisory whose fixed pattern check 2 independently confirms — not claimed as a reproduction of the advisory itself, only as verification that its class of fix is present in the current commit)"
+      "GHSA-9m4c-824h-m4xw (the real advisory whose fixed pattern check 2 independently confirms - not claimed as a reproduction of the advisory itself, only as verification that its class of fix is present in the current commit)"
     ]
   },
 

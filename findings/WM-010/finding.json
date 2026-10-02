@@ -1,10 +1,10 @@
 {
   "id": "WM-010",
-  "title": "Generated API runtime validation (GHSA-cmj5 class) — central wiring confirmed, and both documented exceptions have real enforced compensating controls",
+  "title": "Generated API runtime validation (GHSA-cmj5 class) - central wiring confirmed, and both documented exceptions have real enforced compensating controls",
   "status": "VERIFIED-SECURE",
-  "component": "server/gateway.ts + server/worldmonitor/intelligence/v1/{search-intel-history,get-similar-events}.ts — real target source",
+  "component": "server/gateway.ts + server/worldmonitor/intelligence/v1/{search-intel-history,get-similar-events}.ts - real target source",
   "trust_boundary": 3,
-  "control_tested": "(1) Confirms the central gateway (server/gateway.ts) actually wires a real validateRequest implementation into the generated Sebuf servers — the exact thing GHSA-cmj5-cfhr-w964 ('Generated API runtime validation is disabled') was about. (2) Enumerates every handler that explicitly documents itself as an exception to that gateway-level validation, and verifies each one's claimed compensating bound (a MAX_*_LEN constant) is not just declared but actually passed into a real validation call in the same file.",
+  "control_tested": "(1) Confirms the central gateway (server/gateway.ts) actually wires a real validateRequest implementation into the generated Sebuf servers - the exact thing GHSA-cmj5-cfhr-w964 ('Generated API runtime validation is disabled') was about. (2) Enumerates every handler that explicitly documents itself as an exception to that gateway-level validation, and verifies each one's claimed compensating bound (a MAX_*_LEN constant) is not just declared but actually passed into a real validation call in the same file.",
 
   "tags": {
     "cwe": ["CWE-20", "CWE-1173"],
@@ -12,17 +12,17 @@
     "owasp_api": "API8:2023"
   },
 
-  "description": "The generated Sebuf server code (src/generated/server/) exposes `validateRequest` as an OPTIONAL parameter — each handler does `if (options?.validateRequest)` before checking anything, meaning validation silently no-ops if the caller wiring it up doesn't supply a function. This is exactly the shape of bug GHSA-cmj5 describes. Check 1 confirms the one real place that matters — server/gateway.ts, which constructs every generated server — passes a real `validateRequest: validateGeneratedRequest`. Check 2 goes further: TWO handlers (search-intel-history.ts, get-similar-events.ts) explicitly comment that the gateway does NOT supply validateRequest to them specifically ('buf.validate annotations document the contract but do not run'), because these routes call a paid embeddings provider and an unclamped query length would be a real cost/abuse risk. Both declare a bound (MAX_QUERY_LEN=500, MAX_SITUATION_LEN=1000, matching the proto's own documented max_len) — and both bounds are confirmed ACTUALLY PASSED into a real validateHistoryText(...) call in the same file, not just declared and forgotten.",
-  "preconditions": "N/A — static analysis, no running instance required.",
-  "business_impact": "N/A (control held). This is a genuinely nuanced result worth reporting in full: the generic path has a real, narrow, self-aware exception (not every route gets gateway-level proto validation), but the developers explicitly documented why and manually replicated the exact bound the proto contract specifies. This is the opposite of a silent gap — it's a compensating control, verified to actually run, not just claimed in a comment.",
-  "remediation": "No fix required. If either handler's comment or bound constant is ever edited without the other, the compensating control could silently drift — consider a small dedicated invariant (mirroring the target's own enforce-*.mjs pattern) that fails CI if a file documents a validateRequest exception without a corresponding, actually-used MAX_*_LEN constant.",
+  "description": "The generated Sebuf server code (src/generated/server/) exposes `validateRequest` as an OPTIONAL parameter - each handler does `if (options?.validateRequest)` before checking anything, meaning validation silently no-ops if the caller wiring it up doesn't supply a function. This is exactly the shape of bug GHSA-cmj5 describes. Check 1 confirms the one real place that matters - server/gateway.ts, which constructs every generated server - passes a real `validateRequest: validateGeneratedRequest`. Check 2 goes further: TWO handlers (search-intel-history.ts, get-similar-events.ts) explicitly comment that the gateway does NOT supply validateRequest to them specifically ('buf.validate annotations document the contract but do not run'), because these routes call a paid embeddings provider and an unclamped query length would be a real cost/abuse risk. Both declare a bound (MAX_QUERY_LEN=500, MAX_SITUATION_LEN=1000, matching the proto's own documented max_len) - and both bounds are confirmed ACTUALLY PASSED into a real validateHistoryText(...) call in the same file, not just declared and forgotten.",
+  "preconditions": "N/A - static analysis, no running instance required.",
+  "business_impact": "N/A (control held). This is a genuinely nuanced result worth reporting in full: the generic path has a real, narrow, self-aware exception (not every route gets gateway-level proto validation), but the developers explicitly documented why and manually replicated the exact bound the proto contract specifies. This is the opposite of a silent gap - it's a compensating control, verified to actually run, not just claimed in a comment.",
+  "remediation": "No fix required. If either handler's comment or bound constant is ever edited without the other, the compensating control could silently drift - consider a small dedicated invariant (mirroring the target's own enforce-*.mjs pattern) that fails CI if a file documents a validateRequest exception without a corresponding, actually-used MAX_*_LEN constant.",
 
   "references": {
     "ghsa": null,
     "external": [
       "GHSA-cmj5-cfhr-w964 (the real advisory whose class this independently re-verifies the fix for)",
       "engine/scanners/input-validation.mjs (this project's independent scanner)",
-      "findings/WM-005/ (companion PS scope-area-3 finding — cast-adjacency, a different validation-boundary class)"
+      "findings/WM-005/ (companion PS scope-area-3 finding - cast-adjacency, a different validation-boundary class)"
     ]
   },
 

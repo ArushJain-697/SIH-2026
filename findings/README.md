@@ -15,7 +15,7 @@ findings/
     README            one line: the pinned lab commit + config used
 ```
 
-## Status enum (mandatory — the guardrail skill enforces this)
+## Status enum (mandatory - the guardrail skill enforces this)
 
 | Status | Meaning | Hard requirement |
 | --- | --- | --- |
@@ -23,10 +23,10 @@ findings/
 | `CONFIRMED-NOVEL` | A new issue found by the framework | **Must** be absent from `register/advisories.json`. Check before labelling. |
 | `VERIFIED-SECURE` | Hostile attempt made, control held | **Must** record the vector tested and the evidence it was repelled. |
 
-## Finding schema (bible §11 — ticket #7 instantiates the validator)
+## Finding schema
 
 ```text
-[WM-00X] <Component> — <Class> allows <Impact>
+[WM-00X] <Component> - <Class> allows <Impact>
 Status:    REPRODUCED-KNOWN | CONFIRMED-NOVEL | VERIFIED-SECURE
 Severity:  CVSS 3.1 <score> <vector>
            CVSS 4.0 <vector>
@@ -38,7 +38,7 @@ Lab:       commit <hash>, config <ref>
 Description      the defect and mechanism, not the payload
 Preconditions    auth level, config, seeded state
 Steps            deterministic, against localhost
-Proof of concept benign marker only — see docs/ROE.md
+Proof of concept benign marker only - see docs/ROE.md
 Business impact  money / data / availability / trust, in the owner's terms
 Remediation      specific change, with a diff where possible
 References       OWASP / CWE / the GHSA if reproduced / external anchor

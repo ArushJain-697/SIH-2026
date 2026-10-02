@@ -9,7 +9,7 @@ function buildLines(): Line[] {
   const failures = results.filter((r) => !r.pass).length;
   const lines: Line[] = [
     { text: 'node framework/regression-harness/run.mjs', kind: 'cmd' },
-    { text: 'Advisory-Aware Regression Harness — auto-discovering lab/repro-services/*/manifest.mjs', kind: 'dim' },
+    { text: 'Advisory-Aware Regression Harness: auto-discovering lab/repro-services/*/manifest.mjs', kind: 'dim' },
     { text: `Discovered ${results.length} reproduction manifest(s)`, kind: 'plain' },
     { text: '', kind: 'plain' },
   ];

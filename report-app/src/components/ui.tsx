@@ -46,7 +46,7 @@ type Disk = 'orange' | 'yellow' | 'green' | 'dark';
 
 export function MetricCard({ title, value, sub, icon, disk = 'orange' }: { title: string; value: ReactNode; sub?: string; icon: ReactNode; disk?: Disk }) {
   return (
-    <div className="card metric">
+    <div className="card metric lift">
       <div className={`disk ${disk}`}>{icon}</div>
       <div style={{ minWidth: 0 }}>
         <div className="t">{title}</div>

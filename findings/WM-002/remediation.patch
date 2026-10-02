@@ -5,23 +5,23 @@ index 93509d1..66e9efd 100644
 @@ -1,32 +1,31 @@
  #!/usr/bin/env node
  /**
-- * VULNERABLE variant — minimal reproduction of GHSA-hcq5-jm84-2395:
+- * VULNERABLE variant - minimal reproduction of GHSA-hcq5-jm84-2395:
 - * "MCP daily cost-cap bypass: quota slot refunded after the tool already
 - * executed." This is NOT the live WorldMonitor MCP deployment (no
-- * credentials, no real infra) — it is a faithful minimal model of the
+- * credentials, no real infra) - it is a faithful minimal model of the
 - * documented reserve-then-refund TOCTOU, driven against a REAL (local)
 - * mock-upstream process over real HTTP so the "billable call already
 - * happened" moment is independently observable in mock-upstream's own call
 - * log, not just asserted by this process.
-+ * PATCHED variant — closes the reserve-then-refund TOCTOU from
-+ * vulnerable.mjs. The fix (bible §6 / build-map #17): reservation becomes
++ * PATCHED variant - closes the reserve-then-refund TOCTOU from
++ * vulnerable.mjs. The fix: reservation becomes
 + * IRREVOCABLE the moment the billable upstream call is dispatched. A refund
 + * is only ever permitted for a PRE-FLIGHT failure that happens strictly
-+ * BEFORE the upstream call is dispatched — never based on the content of a
++ * BEFORE the upstream call is dispatched - never based on the content of a
 + * response to a call that already executed and was billed.
   *
 - * The bug: quota is reserved BEFORE the upstream call, then refunded
-- * AFTER the upstream call if the response is classified "malformed" —
+- * AFTER the upstream call if the response is classified "malformed" -
 - * i.e. the refund decision happens strictly after the expensive call
 - * already executed and was billed. An attacker who can always trigger the
 - * "malformed" classification gets unlimited billable upstream calls while
@@ -42,7 +42,7 @@ index 93509d1..66e9efd 100644
  
 +function preflightInvalid(target) {
 +  // Pre-flight validation that can legitimately reject BEFORE any billable
-+  // call is dispatched — e.g. empty/oversized target. This is the ONLY
++  // call is dispatched - e.g. empty/oversized target. This is the ONLY
 +  // path allowed to avoid consuming quota, because it happens before the
 +  // meter runs, not after.
 +  return !target || target.length > 200;
@@ -56,7 +56,7 @@ index 93509d1..66e9efd 100644
    const malformed = url.searchParams.get('malformed') === '1';
  
 -  // 1. Quota check
-+  // Pre-flight — before quota is touched, before anything is dispatched.
++  // Pre-flight - before quota is touched, before anything is dispatched.
 +  if (preflightInvalid(target)) {
 +    res.writeHead(400, { 'Content-Type': 'application/json' });
 +    return res.end(JSON.stringify({ error: 'preflight_invalid', quota_snapshot: quota.snapshot(callerId) }));
@@ -68,12 +68,12 @@ index 93509d1..66e9efd 100644
      return res.end(JSON.stringify({ error: 'quota_exceeded', snapshot: quota.snapshot(callerId) }));
    }
  
--  // 2. RESERVE — before the expensive call (this part is correct)
-+  // RESERVE — atomic and, from this point on, FINAL. No code path below
+-  // 2. RESERVE - before the expensive call (this part is correct)
++  // RESERVE - atomic and, from this point on, FINAL. No code path below
 +  // this line is permitted to call quota.refund().
    quota.reserve(callerId);
  
--  // 3. Dispatch the billable upstream call — this is the moment the tool
+-  // 3. Dispatch the billable upstream call - this is the moment the tool
 -  //    "already executed" (GHSA-hcq5's own phrase). mock-upstream records
 -  //    this independently as billable:true regardless of what happens next.
    let upstreamResult;
@@ -83,7 +83,7 @@ index 93509d1..66e9efd 100644
      upstreamResult = { status: 'upstream_unreachable', error: String(e) };
    }
  
--  // 4. THE BUG — refund fires from the response content, AFTER the billable
+-  // 4. THE BUG - refund fires from the response content, AFTER the billable
 -  //    call already executed. Any caller who can force "content-malformed"
 -  //    gets a free reservation back every time, net cost to their own
 -  //    quota = 0, while mock-upstream's call log shows a real billable hit
@@ -96,13 +96,13 @@ index 93509d1..66e9efd 100644
 -
 +  // THE FIX: no refund path here, regardless of upstreamResult.status. The
 +  // reservation from before dispatch stands no matter what the response
-+  // content says — because the meter already ran.
++  // content says - because the meter already ran.
    res.writeHead(200, { 'Content-Type': 'application/json' });
    res.end(JSON.stringify({
 -    variant: 'VULNERABLE',
 +    variant: 'PATCHED',
      caller: callerId,
--    upstream_billed: true, // mock-upstream always bills on dispatch — see its call log
+-    upstream_billed: true, // mock-upstream always bills on dispatch - see its call log
 -    refunded_after_execution: refunded,
 +    upstream_billed: true,
 +    refunded_after_execution: false, // structurally impossible in this variant

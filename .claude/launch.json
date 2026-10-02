@@ -4,14 +4,24 @@
     {
       "name": "report-app",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "report-app", "run", "dev"],
+      "runtimeArgs": [
+        "--prefix",
+        "report-app",
+        "run",
+        "dev"
+      ],
       "port": 5173,
       "autoPort": true
     },
     {
       "name": "worldmonitor-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", ".cache/worldmonitor-src", "run", "dev"],
+      "runtimeArgs": [
+        "--prefix",
+        ".cache/worldmonitor-src",
+        "run",
+        "dev"
+      ],
       "port": 3000,
       "autoPort": true
     }

@@ -1,0 +1,21 @@
+.console-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #fff;
+  pointer-events: none;
+}
+.console-bg.is-transparent { background: transparent; }
+.console-bg-grid {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  background-size: 44px 44px;
+}
+.console-bg-grid.is-dim { opacity: 1; }
+.console-bg-grid.is-hot {
+  opacity: 1;
+  -webkit-mask-image: radial-gradient(260px circle at var(--cb-x, -500px) var(--cb-y, -500px), #000 0%, transparent 72%);
+  mask-image: radial-gradient(260px circle at var(--cb-x, -500px) var(--cb-y, -500px), #000 0%, transparent 72%);
+}
