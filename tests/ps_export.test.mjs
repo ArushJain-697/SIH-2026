@@ -43,6 +43,6 @@ test('ps-export: severity field is honest for VERIFIED-SECURE (no fabricated CVS
   const secure = findings.filter((f) => f.status === 'VERIFIED-SECURE' && !f.severity?.cvss31_vector);
   for (const f of secure) {
     const entry = buildEntry(f);
-    assert.ok(entry.includes('N/A —'), `${f.id}: VERIFIED-SECURE finding with no severity block should render an honest N/A, not a fabricated score`);
+    assert.ok(entry.includes('N/A -'), `${f.id}: VERIFIED-SECURE finding with no severity block should render an honest N/A, not a fabricated score`);
   }
 });
