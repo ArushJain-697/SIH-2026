@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useCallback, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback, lazy, Suspense, type CSSProperties, type ReactNode } from 'react';
 import { gsap } from 'gsap';
 import { AnimatePresence, motion, useMotionValueEvent, useScroll, useTransform } from 'motion/react';
 import Lenis from 'lenis';
@@ -11,15 +11,15 @@ import {
 } from 'react-icons/si';
 import { data, pinnedCommit, REPO_URL, TARGET_URL } from '../data';
 import { STRESS_FINDINGS } from '../data/stress-findings';
-import { HeroGlobe } from './HeroGlobe';
+const HeroGlobe = lazy(() => import('./HeroGlobe').then((m) => ({ default: m.HeroGlobe })));
 import { WordReveal } from './WordReveal';
 import footerGlow from './assets/footer-glow.webp';
 import heroGlow from './assets/hero-glow.webp';
-import compareGlow from './assets/compare-glow.png';
-import staticAnalysisImg from '../assets/static-analysis.png';
-import dynamicLabImg from '../assets/dynamic-lab.png';
-import scoringImg from '../assets/scoring-in-code.png';
-import reportImg from '../assets/report-and-patch.png';
+import compareGlow from './assets/compare-glow.webp';
+import staticAnalysisImg from '../assets/static-analysis.webp';
+import dynamicLabImg from '../assets/dynamic-lab.webp';
+import scoringImg from '../assets/scoring-in-code.webp';
+import reportImg from '../assets/report-and-patch.webp';
 import './seam.css';
 
 const NAV = [
@@ -189,7 +189,9 @@ function Hero() {
       <div className="sx-hero-stage">
         <motion.div className="sx-hero-mark" style={{ y: markY }} aria-hidden="true">seam<span>.</span></motion.div>
         <motion.div className="sx-hero-globe" style={{ y: globeY }}>
-          <HeroGlobe />
+          <Suspense fallback={null}>
+            <HeroGlobe />
+          </Suspense>
         </motion.div>
       </div>
       <div className="sx-wrap sx-hero-foot">
